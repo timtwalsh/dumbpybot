@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from json import JSONEncoder
+from operator import itemgetter
 
 import discord
 import random
@@ -27,7 +28,6 @@ class Currency(commands.Cog):
         TICK_RATE = bot.TICK_RATE
         self.bot = bot
         self.member_currency = {}
-
         # Bonuses - Note: Cumulative - ie 1+0.5+4 = 5;0.5*IDLE_RATE
         self.IDLE_RATE = 1 / 60 * TICK_RATE  # (1 per minute)
         self.VOICE_BONUS = 0.5  # (100% while in a voice channel)
@@ -60,6 +60,24 @@ class Currency(commands.Cog):
         currency_name = self.bot.CURRENCY_NAME if 2 > currency >= 1 else self.bot.CURRENCY_NAME + 's'
         msg = f"{member.mention} has {currency:.2f} {currency_name}"
         log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
+        await ctx.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+
+    @commands.command(name="topcurrency", aliases=["top$", "topmoney", "topdollars"])
+    async def topatopcurrencyctivities(self, ctx, *, member: discord.Member = None):
+        member = member or ctx.author
+        member = self.member_currency.keys()
+        cash = self.member_currency.values()
+        member_and_cash = list(zip(member, cash))
+        member_and_cash = sorted(member_and_cash, key=itemgetter(1, 0), reverse=True)
+        member_and_cash = member_and_cash[:10]
+        msg = f"Server Wide\n```Top Currency\n"
+        msg += "{0:<25.25} | {1:>.1f} {2}s \n".format("User","Cash")
+        for member, cash in member_and_cash:
+            msg += "{0:<25.25} | {1:>.1f} {2}s \n".format(str(self.bot.get_user(int(member))), cash, self.bot.CURRENCY_NAME)
+            print()
+        msg += "```"
+        # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
         await ctx.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
