@@ -15,7 +15,7 @@ def _default(self, obj):
 _default.default = JSONEncoder().default
 JSONEncoder.default = _default
 
-DEBUG = True
+DEBUG = False
 TOKEN = config.TOKEN
 BOT_PREFIX = "!"
 ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.ActivityStats']
@@ -41,11 +41,11 @@ class DumbClickerBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.TICK_RATE = config.TICK_RATE  # 10 times per minute
-        self.SAVE_RATE = 5  # Save Every minute
+        self.SAVE_RATE = 30  # Save Every minute
         self.SHORT_DELETE_DELAY = 5
         self.MEDIUM_DELETE_DELAY = 30
         self.LONG_DELETE_DELAY = 60
-        self.VERY_LONG_DELETE_DELAY = 60
+        self.VERY_LONG_DELETE_DELAY = 240
         self.CURRENCY_NAME = 'shekel'
         self.CURRENCY_TOKEN = '$'
         self.LOG_CHANNEL = config.LOG_CHANNEL  # Log Channel is used for story Bot Usage History
@@ -69,14 +69,13 @@ class DumbClickerBot(commands.Bot):
                 cog = self.get_cog(cog)
                 await cog.timeout()
             self.time_elapsed += self.TICK_RATE
-            if self.time_elapsed >= self.SAVE_RATE:
+            if self.time_elapsed % self.SAVE_RATE < self.TICK_RATE:
                 for cog in self.cogs:  # Call save on all cogs.
                     cog = self.get_cog(cog)
                     if hasattr(cog, 'save_data'):
                         await cog.save_data()
                     else:
                         print(cog.qualified_name, 'no data to be saved.')
-                self.time_elapsed = 1
             if DEBUG:
                 await channel.send(f"Parent: {self.time_elapsed}")
             await asyncio.sleep(self.TICK_RATE)  # task runs every 60 seconds

@@ -71,10 +71,10 @@ class Currency(commands.Cog):
         member_and_cash = list(zip(member, cash))
         member_and_cash = sorted(member_and_cash, key=itemgetter(1, 0), reverse=True)
         member_and_cash = member_and_cash[:10]
-        msg = f"Server Wide\n```Top Currency\n"
-        msg += "{0:<25.25} | {1:>.1f} {2}s \n".format("User","Cash")
+        msg = f"Server Wide\n```Top {str(self.bot.CURRENCY_NAME).capitalize()} Earners \n"
+        msg += f"{'User':<25.25} | {str(self.bot.CURRENCY_NAME).capitalize()}s \n- - - - - - - - - - - - - - - - - - - -\n"
         for member, cash in member_and_cash:
-            msg += "{0:<25.25} | {1:>.1f} {2}s \n".format(str(self.bot.get_user(int(member))), cash, self.bot.CURRENCY_NAME)
+            msg += f"{str(self.bot.get_user(int(member))):<25.25} | {self.bot.CURRENCY_TOKEN}{cash:>.1f} \n"
             print()
         msg += "```"
         # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
@@ -92,13 +92,14 @@ class Currency(commands.Cog):
                     current_member_currency = 0.0
                 else:
                     current_member_currency = self.member_currency[str(member.id)]
+
                 # Apply Activity Bonuses to encourage member participation
                 cumulative_activity_bonus = 1
                 if member.activity is not None:
                     cumulative_activity_bonus += self.ACTIVITY_BONUS
-
                 if member.voice is not None:
                     cumulative_activity_bonus += self.VOICE_BONUS
+
                 # Apply Happy Hour Bonus, 6pm-midnight on weekdays, all hours on Saturday/Sunday
                 weekday = datetime.today().weekday()
                 hour = datetime.today().hour + datetime.today().minute / 60

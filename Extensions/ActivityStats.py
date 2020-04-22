@@ -95,22 +95,22 @@ class ActivityStats(commands.Cog):
         log_channel = self.bot.get_channel(self.bot.LOG_CHANNEL)
         if not self.bot.is_closed() and self.bot.time_elapsed > 0:
             for member in self.bot.get_all_members():
-                try:
-                    if member.activity is not None:
-                        # all activity
-                        if str(member.activity.name) in self.activities:
-                            self.activities[str(member.activity.name)] += self.bot.TICK_RATE
-                        else:
-                            self.activities[str(member.activity.name)] = self.bot.TICK_RATE
-                        # user activity
-                        if str(member.activity.name) in self.user_activities[str(member.id)]:
-                            self.user_activities[str(member.id)][str(member.activity.name)] += self.bot.TICK_RATE
-                        else:
-                            self.user_activities[str(member.id)][str(member.activity.name)] = self.bot.TICK_RATE
-                    if DEBUG:
-                        print(member.id, member, self.user_activities[str(member.id)], sep=",")
-                except:
-                    print(member.name, Exception, self.user_activities[str(member.id)], str(member.activity.name))
+                if member.activity is not None:
+                    # all activity
+                    if str(member.activity.name) not in self.activities.keys():
+                        print("New Activity:", member.activity.name)
+                        self.activities[str(member.activity.name)] = self.bot.TICK_RATE
+                    else:
+                        self.activities[str(member.activity.name)] += self.bot.TICK_RATE
+                    if str(member.id) not in self.user_activities.keys():
+                        self.user_activities[str(member.id)] = {}
+                    if str(member.activity.name) not in self.user_activities[str(member.id)].keys():
+                        print("New User Activity:", member.activity.name)
+                        self.user_activities[str(member.id)][str(member.activity.name)] = self.bot.TICK_RATE
+                    else:
+                        self.user_activities[str(member.id)][str(member.activity.name)] += self.bot.TICK_RATE
+                if DEBUG:
+                    print(member.id, member, self.user_activities[str(member.id)], sep=",")
             self.time_elapsed += TICK_RATE
 
 
