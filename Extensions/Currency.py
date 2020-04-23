@@ -29,11 +29,42 @@ class Currency(commands.Cog):
         self.bot = bot
         self.member_currency = {}
         # Bonuses - Note: Cumulative - ie 1+0.5+4 = 5;0.5*IDLE_RATE
-        self.IDLE_RATE = 1 / 60 * TICK_RATE  # (1 per minute)
+        self.IDLE_RATE = 6 / 60 / 60 * TICK_RATE  # (1 per hour)
         self.VOICE_BONUS = 0.5  # (100% while in a voice channel)
         self.ACTIVITY_BONUS = 0.5  # (50% while active)
         self.HAPPY_HOUR_BONUS = 4  # (400% during happy hour)
         self.time_elapsed = 0
+
+    def get_user_currency(self, user_id=""):
+        if user_id != "":
+            return self.member_currency[user_id]
+        else:
+            print("Error, must specify a user_id")
+            return False
+
+    def remove_user_currency(self, user_id="", amount=0):
+        # Removes currency from user balance, returns true if user has sufficient balance
+        if user_id != "":
+            if self.member_currency[user_id] >= amount:
+                self.member_currency[user_id] -= amount
+                return True
+            else:
+                return False
+        else:
+            print("Error, must specify a user_id")
+            return False
+
+    def add_user_currency(self, user_id="", amount=0):
+        # adds currency from user balance, returns true if user has sufficient balance
+        if user_id != "":
+            if amount > 0:
+                self.member_currency[user_id] += amount
+                return True
+            else:
+                return False
+        else:
+            print("Error, must specify a user_id")
+            return False
 
     async def load_data(self):
         try:
@@ -64,17 +95,16 @@ class Currency(commands.Cog):
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="topcurrency", aliases=["top$", "topmoney", "topdollars"])
-    async def topatopcurrencyctivities(self, ctx, *, member: discord.Member = None):
-        member = member or ctx.author
+    async def topatopcurrencyctivities(self, ctx):
         member = self.member_currency.keys()
         cash = self.member_currency.values()
         member_and_cash = list(zip(member, cash))
         member_and_cash = sorted(member_and_cash, key=itemgetter(1, 0), reverse=True)
         member_and_cash = member_and_cash[:10]
-        msg = f"Server Wide\n```Top {str(self.bot.CURRENCY_NAME).capitalize()} Earners \n"
-        msg += f"{'User':<25.25} | {str(self.bot.CURRENCY_NAME).capitalize()}s \n- - - - - - - - - - - - - - - - - - - -\n"
+        msg = f"{ctx.guild.name} Top {str(self.bot.CURRENCY_NAME).capitalize()} Earners \n```"
+        msg += f"{'User':<32.32} | {str(self.bot.CURRENCY_NAME).capitalize()}s \n- - - - - - - - - - - - - - - - -|- - - - - - - - -\n"
         for member, cash in member_and_cash:
-            msg += f"{str(self.bot.get_user(int(member))):<25.25} | {self.bot.CURRENCY_TOKEN}{cash:>.1f} \n"
+            msg += f"{str(self.bot.get_user(int(member))):<32.32} | {self.bot.CURRENCY_TOKEN}{cash:>.1f} \n"
             print()
         msg += "```"
         # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)

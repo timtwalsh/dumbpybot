@@ -18,8 +18,7 @@ JSONEncoder.default = _default
 DEBUG = False
 TOKEN = config.TOKEN
 BOT_PREFIX = "!"
-ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.ActivityStats']
-                     # 'Extensions.Gambling', 'Extensions.Misc']
+ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.ActivityStats', 'Extensions.Gambling', 'Extensions.Misc']
 
 
 class Context(commands.Context):
@@ -50,7 +49,10 @@ class DumbClickerBot(commands.Bot):
         self.CURRENCY_TOKEN = '$'
         self.LOG_CHANNEL = config.LOG_CHANNEL  # Log Channel is used for story Bot Usage History
         self.DEBUG_CHANNEL = config.DEBUG_CHANNEL  # Test Channel is used for debugging
+        self.ACTIVITY_IGNORE_LIST = ['Spiralling Ever Downwards', 'Yu-Gi-Oh! Duel Links']
         self.time_elapsed = 0
+        if DEBUG:
+            print(f'__init__', end='')
         self.bg_task = self.loop.create_task(self.timeout())
 
     async def on_ready(self):
@@ -62,7 +64,11 @@ class DumbClickerBot(commands.Bot):
         print('------------------------------------------------------------')
 
     async def timeout(self):
+        if DEBUG:
+            print(f', timeout() started', end='')
         await self.wait_until_ready()
+        if DEBUG:
+            print(f', wait_until_ready() complete')
         channel = self.get_channel(self.DEBUG_CHANNEL)
         while not self.is_closed():
             for cog in self.cogs:  # Call timeout on all cogs.
@@ -74,8 +80,11 @@ class DumbClickerBot(commands.Bot):
                     cog = self.get_cog(cog)
                     if hasattr(cog, 'save_data'):
                         await cog.save_data()
+                        if DEBUG:
+                            print(f'{cog.qualified_name} COG saved. ', end='')
                     else:
                         print(cog.qualified_name, 'no data to be saved.')
+                print()
             if DEBUG:
                 await channel.send(f"Parent: {self.time_elapsed}")
             await asyncio.sleep(self.TICK_RATE)  # task runs every 60 seconds
