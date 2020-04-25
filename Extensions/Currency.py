@@ -122,7 +122,6 @@ class Currency(commands.Cog):
                     current_member_currency = 0.0
                 else:
                     current_member_currency = self.member_currency[str(member.id)]
-
                 # Apply Activity Bonuses to encourage member participation
                 cumulative_activity_bonus = 1
                 if member.activity is not None:

@@ -57,8 +57,17 @@ class Misc(commands.Cog):
             await ctx.message.add_reaction('<:sadKEK:688339429508775955>')
             await log.add_reaction('<:sadKEK:688339429508775955>')
         except discord.HTTPException:
-            print(self.qualified_name,"failed to react to Message by",ctx.author)
+            print(self.qualified_name, "failed to react to Message by", ctx.author)
         await ctx.message.delete(delay=self.SHORT_DELETE_DELAY)
+
+    @commands.command()
+    async def purge(self, ctx, purge_count=2):
+        if str(ctx.author.id) == self.bot.ADMINISTRATOR:
+            if purge_count >= 1:
+                deleted = await ctx.channel.purge(limit=int(purge_count))
+                delete_message = False
+                await ctx.channel.send('{} Deleted {} message(s)'.format(ctx.author, len(deleted)),
+                                       delete_after=self.bot.SHORT_DELETE_DELAY)
 
     async def timeout(self):
         channel = self.bot.get_channel(self.bot.DEBUG_CHANNEL)

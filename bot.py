@@ -47,6 +47,7 @@ class DumbClickerBot(commands.Bot):
         self.VERY_LONG_DELETE_DELAY = 240
         self.CURRENCY_NAME = 'shekel'
         self.CURRENCY_TOKEN = '$'
+        self.ADMINISTRATOR = str(config.ADMINISTRATOR)
         self.LOG_CHANNEL = config.LOG_CHANNEL  # Log Channel is used for story Bot Usage History
         self.DEBUG_CHANNEL = config.DEBUG_CHANNEL  # Test Channel is used for debugging
         self.ACTIVITY_IGNORE_LIST = ['Spiralling Ever Downwards', 'Yu-Gi-Oh! Duel Links']
@@ -73,7 +74,11 @@ class DumbClickerBot(commands.Bot):
         while not self.is_closed():
             for cog in self.cogs:  # Call timeout on all cogs.
                 cog = self.get_cog(cog)
-                await cog.timeout()
+
+                if hasattr(cog, 'timeout'):
+                    await cog.timeout()
+                    if DEBUG:
+                        print(f'{cog.qualified_name} COG trigger. ', end='')
             self.time_elapsed += self.TICK_RATE
             if self.time_elapsed % self.SAVE_RATE < self.TICK_RATE:
                 for cog in self.cogs:  # Call save on all cogs.

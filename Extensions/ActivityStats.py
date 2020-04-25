@@ -6,7 +6,7 @@ import discord
 import random
 from discord.ext import tasks, commands
 
-DEBUG = True
+DEBUG = False
 TICK_RATE = 6  # Default
 emoji_letters_dict = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭', 'I': '🇮',
                       'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶', 'R': '🇷',
@@ -37,9 +37,9 @@ class ActivityStats(commands.Cog):
         except FileNotFoundError:  # file doesn't exist, init all members with 0 currency to avoid index errors
             for member in self.bot.get_all_members():
                 if member.activity is not None:
-                    self.activities[current_activity] = 0
+                    self.activities[member.activity] = 0
                     self.user_activities[str(member.id)] = {}
-                    self.user_activities[str(member.id)][current_activity] = 0
+                    self.user_activities[str(member.id)][member.activity] = 0
 
     async def save_data(self):
         if len(self.user_activities) > 0:
@@ -50,27 +50,32 @@ class ActivityStats(commands.Cog):
 
     @commands.command(name="myactivities", aliases=["useractivities", "mygames", "usergames", "useract", "act"])
     async def myactivities(self, ctx, *, member: discord.Member = None):
+        """!mygames and !usergames [@user]"""
         member = member or ctx.author
-        activity = self.user_activities[str(member.id)].keys()
-        playtime = self.user_activities[str(member.id)].values()
-        activities_and_playtime = list(zip(activity, playtime))
-        activities_and_playtime = sorted(activities_and_playtime, key=itemgetter(1, 0), reverse=True)
-        activities_and_playtime = activities_and_playtime[:10]
-        msg = f"{member.mention}\n```User {member} Top Playtime:\n"
-        for activity, playtime in activities_and_playtime:
-            if playtime / 60 < 600:
-                msg += "{0:<32.32} | {1:>.1f} minutes(s) \n".format(str(activity), playtime / 60)
-            elif (playtime / 60 / 60) < 24:
-                msg += "{0:<32.32} | {1:>.1f} hours(s) \n".format(str(activity), playtime / 60 / 60)
-            else:
-                msg += "{0:<32.32} | {1:>.1f} days(s) \n".format(str(activity), playtime / 60 / 60 / 24)
-        msg += "```"
-        # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
-        await ctx.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
-        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+        try:
+            activity = self.user_activities[str(member.id)].keys()
+            playtime = self.user_activities[str(member.id)].values()
+            activities_and_playtime = list(zip(activity, playtime))
+            activities_and_playtime = sorted(activities_and_playtime, key=itemgetter(1, 0), reverse=True)
+            activities_and_playtime = activities_and_playtime[:10]
+            msg = f"{member.mention}\n```User {member} Top Playtime:\n"
+            for activity, playtime in activities_and_playtime:
+                if playtime / 60 < 600:
+                    msg += "{0:<32.32} | {1:>.1f} minutes(s) \n".format(str(activity), playtime / 60)
+                elif (playtime / 60 / 60) < 24:
+                    msg += "{0:<32.32} | {1:>.1f} hours(s) \n".format(str(activity), playtime / 60 / 60)
+                else:
+                    msg += "{0:<32.32} | {1:>.1f} days(s) \n".format(str(activity), playtime / 60 / 60 / 24)
+            msg += "```"
+            # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
+            await ctx.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+            await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+        except KeyError:
+            print(f'ERROR: {member} has not been recorded with an activity yet...')
 
     @commands.command(name="topactivities", aliases=["topgames", "games", "activities"])
     async def topactivities(self, ctx, *, member: discord.Member = None):
+        """!topgames and !games"""
         member = member or ctx.author
         temp_activities = {}
         temp_activities = {**self.activities}
@@ -102,29 +107,29 @@ class ActivityStats(commands.Cog):
             for member in self.bot.get_all_members():
                 if member.activity is not None:
                     # all activity
-                    if member.activity.name == "BlueStacks":
-                        current_activity = member.activity.details
-                    else:
-                        current_activity = member.activity.name
-                    if current_activity not in self.activities.keys():
-                        print("New Activity:", member.activity.name)
-                        self.activities[current_activity] = self.bot.TICK_RATE
-                    else:
-                        self.activities[current_activity] += self.bot.TICK_RATE
-                    if str(member.id) not in self.user_activities.keys():
-                        self.user_activities[str(member.id)] = {}
-                    if current_activity not in self.user_activities[str(member.id)].keys():
-                        print("New User Activity:", member.activity.name)
-                        self.user_activities[str(member.id)][current_activity] = self.bot.TICK_RATE
-                    else:
-                        self.user_activities[str(member.id)][current_activity] += self.bot.TICK_RATE
-                    if DEBUG:
-                        try:
-                            print(member.id, member, self.user_activities[str(member.id)], sep=",")
+                    try:
+                        if member.activity.name == "BlueStacks":
+                            current_activity = member.activity.details
+                        else:
+                            current_activity = member.activity.name
+                        if current_activity not in self.activities.keys():
+                            print("New Activity:", member.activity.name, end=", ")
+                            self.activities[current_activity] = self.bot.TICK_RATE
+                        else:
+                            self.activities[current_activity] += self.bot.TICK_RATE
+                        if str(member.id) not in self.user_activities.keys():
+                            self.user_activities[str(member.id)] = {}
+                        if current_activity not in self.user_activities[str(member.id)].keys():
+                            print("New User Activity:", member.activity.name, end=", ")
+                            self.user_activities[str(member.id)][current_activity] = self.bot.TICK_RATE
+                        else:
+                            self.user_activities[str(member.id)][current_activity] += self.bot.TICK_RATE
+                        if DEBUG:
+                            print(member.id, member, sep=",")
                             # if member.activity.name == "BlueStacks":
                             #     print(member.activity.type,member.activity.name,member.activity.state,member.activity.details)
-                        except Exception:
-                            print("ERROR:", member)
+                    except Exception:
+                        print("ERROR:", member)
                 # if DEBUG:
                 #     print(member.id, member, self.user_activities[str(member.id)], sep=",")
             self.time_elapsed += TICK_RATE
