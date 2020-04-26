@@ -33,6 +33,17 @@ class Misc(commands.Cog):
         total = first + second
         await ctx.send(f'The sum of **{first}** and **{second}**  is  **{total}**')
 
+    @commands.command()
+    async def winners(self, ctx):
+        """A simple command which does addition on two integer values."""
+        past_winners = ["Season 1 - Mangles", "Season 2 - Mangles", "Season 3 - Dave"]
+        msg = "Shekel Season Past Winners\n```"
+        for winner in past_winners:
+            msg += winner
+            msg += '\n'
+        msg += "```"
+        await ctx.send(f'{msg}')
+
     @commands.command(name="nopeprevious", aliases=['nopethat'])
     async def nopethat(self, ctx, *, member: discord.Member = None):
         channel = ctx.channel
