@@ -18,7 +18,8 @@ JSONEncoder.default = _default
 DEBUG = False
 TOKEN = config.TOKEN
 BOT_PREFIX = "!"
-ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.ActivityStats', 'Extensions.Gambling', 'Extensions.Misc']
+ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.ActivityStats', 'Extensions.Gambling', 'Extensions.Misc',
+                     'Extensions.HorseRace']
 
 
 class Context(commands.Context):
@@ -56,12 +57,16 @@ class DumbClickerBot(commands.Bot):
             print(f'__init__', end='')
         self.bg_task = self.loop.create_task(self.timeout())
 
+
     async def on_ready(self):
         print('Logged in as', self.user.name, self.user.id)
         for cog in self.cogs:  # Call timeout on all cogs.
             cog = self.get_cog(cog)
             if hasattr(cog, 'load_data'):
                 await cog.load_data()
+            if hasattr(cog, 'on_message'):
+                bot.add_listener(cog.on_message, 'on_message')
+                print(cog, "Added on_message")
         print('------------------------------------------------------------')
 
     async def timeout(self):
