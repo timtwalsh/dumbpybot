@@ -80,12 +80,14 @@ class Gambling(commands.Cog):
 
     @commands.command(aliases=["mybets", "mygambles", "my_gamble_stats"])
     async def usergamblestats(self, ctx):
+        """!mybets or !mygambles"""
         print(self.user_gambling_stats)
         msg = f'{ctx.author} Gambling Stats {self.user_gambling_stats[str(ctx.author.id)]}'
         message = await ctx.send(msg, delete_after=self.bot.LONG_DELETE_DELAY)
 
-    @commands.command(aliases=["gamblestats", "allgambles", "all_gamble_stats"])
-    async def allgamblestats(self, ctx):
+    @commands.command(aliases=["allgambles", "all_gamble_stats"])
+    async def gamblestats(self, ctx):
+        """!gamblestats or !allgambles"""
         print(self.user_gambling_stats)
         msg = f'{ctx.guild.name} Gambling Stats \n'
         for gamble in self.gambling_history.keys():

@@ -86,6 +86,7 @@ class Currency(commands.Cog):
 
     @commands.command(name="mycurrency", aliases=["my$", "my $", "my$hekels", "user$", "user $"])
     async def mycurrency(self, ctx, *, member: discord.Member = None):
+        """!my$ or user$ [user]"""
         member = member or ctx.author
         currency = self.member_currency[str(member.id)]
         currency_name = self.bot.CURRENCY_NAME if 2 > currency >= 1 else self.bot.CURRENCY_NAME + 's'
@@ -96,6 +97,7 @@ class Currency(commands.Cog):
 
     @commands.command(name="topcurrency", aliases=["top$", "topmoney", "topdollars"])
     async def topatopcurrencyctivities(self, ctx):
+        """!top$"""
         member = self.member_currency.keys()
         cash = self.member_currency.values()
         member_and_cash = list(zip(member, cash))
