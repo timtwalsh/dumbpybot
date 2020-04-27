@@ -67,8 +67,8 @@ def horse_race(track_length):
     horse_tired_speed = 0.01
     acc_influence = 1.5
     random_influence = acc_influence
-    stam_influence = 3
-    speed_influence = 2
+    stam_influence = 4
+    speed_influence = 1.75
     base_speed = 1.5
     exhaustion_rate = 1.5
     race_horse_names = []
