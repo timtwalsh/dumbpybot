@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from discord.ext import commands
 
-DEBUG = True
+DEBUG = False
 TICK_RATE = 6  # Default
 emoji_letters_dict = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭', 'I': '🇮',
                       'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶', 'R': '🇷',
@@ -181,8 +181,8 @@ class HorseRace(commands.Cog):
         self.bot = bot
         self.time_elapsed = 0
 
-        self.HORSE_WAIT_TIME = 45
-        self.HORSE_REQUIRED_BETTERS = 2
+        self.HORSE_WAIT_TIME = 30
+        self.HORSE_REQUIRED_BETTERS = 1
         self.horse_race_status = ""
         self.horse_race_numbers = []
         self.horse_users = []
@@ -228,9 +228,10 @@ class HorseRace(commands.Cog):
                         break
                     else:
                         await message.edit(content=msg)
-                        asyncio.sleep(1)
+                        await asyncio.sleep(1)
 
                 if user_count >= required_betters:
+                    betters = ''
                     if DEBUG:
                         print("horse_race user_count >= required", required_betters)
                     self.horse_race_status = "Horse Race: LISTING: "
@@ -243,37 +244,60 @@ class HorseRace(commands.Cog):
                                                                                     HORSE_DESCRIPTIONS[horse])
                         msg = "Type !bet horse_number amount to place your bets ... {} seconds to go\nEg !bet 11 500 to bet 500 on Clockwork.```{} Furlong Race\n\n{}```".format(
                             second, round(track_length / 8), horse_listing)
-                        await message.edit(content=self.horse_race_status + msg)
+                        betters = ''
+                        for user in self.horse_bets.keys():
+                            user_bets = self.horse_bets[user].split("|")
+                            for user_bet in user_bets:
+                                user_bet_details = user_bet.split('_')
+                                if user_bet_details[0] != '':
+                                    user_bet_horse = user_bet_details[0]
+                                    bet_amount = user_bet_details[1]
+                                    betters += '\n{} bet §{} on {}'.format(user, bet_amount,
+                                                                           HORSE_NAMES[
+                                                                               user_bet_horse])
+                        await message.edit(content=self.horse_race_status + msg + '```\nBets' + betters + '```')
                         await asyncio.sleep(5)
                     if user_count >= required_betters:
-                        horse_race_status = "Horse Race: TAKING BETS: "
+                        self.horse_race_status = "Horse Race: TAKING BETS: "
                         for second in range(wait_time, 0, -5):
                             horse_listing = ""
+                            betters = ''
+                            for user in self.horse_bets.keys():
+                                user_bets = self.horse_bets[user].split("|")
+                                for user_bet in user_bets:
+                                    user_bet_details = user_bet.split('_')
+                                    if user_bet_details[0] != '':
+                                        user_bet_horse = user_bet_details[0]
+                                        bet_amount = user_bet_details[1]
+                                        betters += '\n{} bet §{} on {}'.format(user, bet_amount,
+                                                                               HORSE_NAMES[
+                                                                                   user_bet_horse])
                             for horse in self.horse_race_numbers:
                                 horse_listing += "(#{}){} at {} to 1\n     {}\n".format(horse, HORSE_NAMES[horse],
                                                                                         self.horse_odds[horse],
                                                                                         HORSE_DESCRIPTIONS[horse])
                             msg = "{} Bets Placed, need {} to continue ... {} seconds to go\nEg !bet 11 500 to bet 500 on Clockwork.```{} Furlong Race\n\n{}```".format(
                                 len(self.horse_bets.keys()), required_betters, second, track_length / 8, horse_listing)
-                            await message.edit(content=horse_race_status + msg)
+                            await message.edit(content=self.horse_race_status + msg + '```\nBets' + betters + '```')
                             await asyncio.sleep(5)
                         if len(self.horse_bets.keys()) >= round(required_betters / 2):
-                            horse_race_status = "Horse Race: STARTING: "
+                            self.horse_race_status = "Horse Race: STARTING: "
                             msg = ''.join([str(line) for line in horse_frames[0]])
-                            if horse_race_status != "":
-                                horse_race_status = "Horse Race: RUNNING: "
+                            if self.horse_race_status != "":
+                                self.horse_race_status = "Horse Race: RUNNING: "
                                 for frame in horse_frames:
                                     msg = ''.join([str(line) for line in frame])
-                                    await message.edit(content=horse_race_status + msg)
+                                    await message.edit(
+                                        content=self.horse_race_status + msg + '```\nBets' + betters + '```')
                                     await asyncio.sleep(1)
                                 await asyncio.sleep(3)
-                                horse_race_status = "Horse Race: FINISHED: "
+                                self.horse_race_status = "Horse Race: FINISHED: "
                                 winning_horse = self.horse_positions[3]
                                 msg = '```'
                                 msg += ''.join([str(line) for line in HORSE_FINISH_IMAGE])
                                 msg += ''.join([str(line) for line in HORSE_FINISH_NAME])
                                 msg += '     #{} {} Takes the win!```'.format(winning_horse[1], winning_horse[0])
-                                await message.edit(content=horse_race_status + msg)
+                                await message.edit(content=self.horse_race_status + msg)
                                 msg += '```************ BET RESULTS ************'
                                 winning_odds = self.horse_odds[winning_horse[1]]
                                 winners = ''
@@ -314,7 +338,7 @@ class HorseRace(commands.Cog):
                                 msg += winners
                                 msg += losers
                                 msg += ' ```'
-                                await message.edit(content=horse_race_status + msg)
+                                await message.edit(content=self.horse_race_status + msg)
                                 self.horse_race_status = ''
                                 self.horse_users = []
                         else:
@@ -372,7 +396,7 @@ class HorseRace(commands.Cog):
                 if horse_user in self.horse_bets:
                     bet_horse = -3
                 if int(bet_horse) > 0:
-                    horse_bet_amount = int(horse_bet_amount)
+                    horse_bet_amount = float(horse_bet_amount)
                     if valid_bet:
                         if horse_user in self.horse_bets.keys():
                             self.horse_bets[horse_user] += "{}_{}|".format(bet_horse, horse_bet_amount)

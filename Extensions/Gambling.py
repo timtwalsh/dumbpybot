@@ -82,8 +82,12 @@ class Gambling(commands.Cog):
     async def usergamblestats(self, ctx):
         """!mybets or !mygambles"""
         print(self.user_gambling_stats)
-        msg = f'{ctx.author} Gambling Stats {self.user_gambling_stats[str(ctx.author.id)]}'
+        msg = f'{ctx.author} Gambling Stats```'
+        for bet in self.user_gambling_stats[str(ctx.author.id)]:
+            msg += f'\n{bet}: {self.user_gambling_stats[str(ctx.author.id)][bet][0]:>3} Wins, {self.user_gambling_stats[str(ctx.author.id)][bet][2]:>3} losses. Net Outcome: {self.user_gambling_stats[str(ctx.author.id)][bet][1] - self.user_gambling_stats[str(ctx.author.id)][bet][3]:>12.2f}'
+        msg += '```'
         message = await ctx.send(msg, delete_after=self.bot.LONG_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(aliases=["allgambles", "all_gamble_stats"])
     async def gamblestats(self, ctx):
