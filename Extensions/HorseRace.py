@@ -182,7 +182,7 @@ class HorseRace(commands.Cog):
         self.time_elapsed = 0
 
         self.HORSE_WAIT_TIME = 30
-        self.HORSE_REQUIRED_BETTERS = 1
+        self.HORSE_REQUIRED_BETTERS = 3
         self.horse_race_status = ""
         self.horse_race_numbers = []
         self.horse_users = []
