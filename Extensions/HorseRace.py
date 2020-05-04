@@ -193,7 +193,6 @@ class HorseRace(commands.Cog):
         self.user_name_to_user_id = defaultdict()
 
     async def on_message(self, message):
-        # we do not want the bot to reply to itself
         if message.author.id == self.bot.user.id:
             if message.content.lower().startswith("horse race: "):
                 self.horse_listing = ""
@@ -311,7 +310,8 @@ class HorseRace(commands.Cog):
                                             bet_amount = user_bet_details[1]
                                             if winning_horse[1] == user_bet_horse:
                                                 winners += '\n{} who bet §{} on {} and won §{}'.format(user,
-                                                                                                       int(bet_amount),
+                                                                                                       float(
+                                                                                                           bet_amount),
                                                                                                        HORSE_NAMES[
                                                                                                            user_bet_horse],
                                                                                                        float(
