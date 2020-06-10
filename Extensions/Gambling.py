@@ -121,7 +121,7 @@ class Gambling(commands.Cog):
                                         self.deathroll_current = roll
                                     msg = self.deathroll_status + '```'
                                     self.deathroll_ready = False
-                                    break;
+                                    break
                                 else:
                                     msg = self.deathroll_status + f"{user}'s turn... {second} seconds till auto-roll." + '```'
                                 await message.edit(content=msg)
@@ -156,7 +156,7 @@ class Gambling(commands.Cog):
                     self.bot.get_cog('Currency').add_user_currency(self.deathroll_user_ids[0], deathroll_total)
                     msg = self.deathroll_status + '```'
                     # self.add_gamblestat("Deathroll", self.deathroll_user_ids[0], True, deathroll_total)
-                    await message.channel.send(winner)
+                    await message.channel.send(winner, delete_after=60)
                     self.deathroll_status = ''
                     self.deathroll_users = []
                     self.deathroll_user_ids = []
@@ -193,7 +193,7 @@ class Gambling(commands.Cog):
 
     @commands.command(aliases=["dr", "Dr", "DR"])
     async def deathroll(self, ctx):
-        """!Deathroll [amt]"""
+        """!Deathroll [amt] or !dr [amt]"""
         bet_string = ctx.message.content.split(' ')
         bet_user = str(ctx.author)
         bet_user_id = str(ctx.author.id)
