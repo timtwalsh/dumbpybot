@@ -130,18 +130,18 @@ class Gambling(commands.Cog):
                     msg = self.deathroll_status + '```'
                     await message.edit(content=msg)
                     await asyncio.sleep(3)
-                    self.deathroll_status = self.deathroll_status + "\n ________________________________________\n" \
-                                                                    "/ {:^38} \\\n\________________________________________/\n      " \
-                                                                    "        ...        /\n             ;::::;    " \
-                                                                    " /\n           ;::::; :;   /\n         " \
-                                                                    ";:::::'   :; /\n        ;:::::;     ;/\n     " \
-                                                                    "  ,:::::'      /;           OOO\n       " \
-                                                                    "::::::;     / ;          OOOOO\n       " \
-                                                                    ";:::::;       ;         OOOOOOOO\n      ," \
-                                                                    ";::::::;     ;'         / OOOOOOO\n    " \
-                                                                    ";:::::::::`. ,,,;.        /  / DOOOOOO\n  " \
-                                                                    ".';:::::::::::::::::;,     /  /     DOOOO\n " \
-                                                                    ",::::::;::::::;;;;::::;,   /  /        " \
+                    winner = "\n ________________________________________\n" \
+                             "/ {:^38} \\\n\________________________________________/\n      " \
+                             "        ...        /\n             ;::::;    " \
+                             " /\n           ;::::; :;   /\n         " \
+                             ";:::::'   :; /\n        ;:::::;     ;/\n     " \
+                             "  ,:::::'      /;           OOO\n       " \
+                             "::::::;     / ;          OOOOO\n       " \
+                             ";:::::;       ;         OOOOOOOO\n      ," \
+                             ";::::::;     ;'         / OOOOOOO\n    " \
+                             ";:::::::::`. ,,,;.        /  / DOOOOOO\n  " \
+                             ".';:::::::::::::::::;,     /  /     DOOOO\n " \
+                             ",::::::;::::::;;;;::::;,   /  /        " \
                                                                     "DOOO\n;`::::::`'::::::;;;::::: ,#/  /        " \
                                                                     "  DOOO\n:`:::::::`;::::::;;::: ;::#  /       " \
                                                                     "     DOOO\n::`:::::::`;:::::::: ;::::# /     " \
@@ -153,11 +153,10 @@ class Gambling(commands.Cog):
                                                                     "   O\n  `:::::`::::::::;' /  / `:#\n   " \
                                                                     "::::::`:::::;'  /  /   `#".format(
                         self.deathroll_users[0] + ' wins this round...')
-                    msg = self.deathroll_status + '```'
-                    await message.edit(content=msg)
-                    await asyncio.sleep(1)
                     self.bot.get_cog('Currency').add_user_currency(self.deathroll_user_ids[0], deathroll_total)
+                    msg = self.deathroll_status + '```'
                     # self.add_gamblestat("Deathroll", self.deathroll_user_ids[0], True, deathroll_total)
+                    await message.channel.send(winner)
                     self.deathroll_status = ''
                     self.deathroll_users = []
                     self.deathroll_user_ids = []
