@@ -316,7 +316,7 @@ class Gambling(commands.Cog):
             await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
             await message.delete(delay=self.bot.MEDIUM_DELETE_DELAY)
         else:
-            msg = f'Coin Toss:  Invalid Bet'
+            msg = f'Coin Toss: Not Enough Currency.'
             await ctx.send(msg, delete_after=self.bot.SHORT_DELETE_DELAY)
 
     async def timeout(self):
