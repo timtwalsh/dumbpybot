@@ -29,12 +29,6 @@ class Context(commands.Context):
             await self.message.add_reaction(emoji)
         except discord.HTTPException:
             pass
-    #
-    # async def on_message(self, message):
-    #     if message.author == self.user:
-    #         pass
-    #     else:
-    #         pass
 
 
 class DumbClickerBot(commands.Bot):
@@ -56,7 +50,6 @@ class DumbClickerBot(commands.Bot):
         if DEBUG:
             print(f'__init__', end='')
         self.bg_task = self.loop.create_task(self.timeout())
-
 
     async def on_ready(self):
         print('Logged in as', self.user.name, self.user.id)
