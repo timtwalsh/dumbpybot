@@ -24,6 +24,15 @@ class Gambling(commands.Cog):
         # self.gamblestats.setdefault('None',{'Heads': [0, 0, 0, 0]})
         self.SHORT_DELETE_DELAY = bot.SHORT_DELETE_DELAY
         self.time_elapsed = 0
+        self.deathroll_users = []
+        self.deathroll_status = ''
+        self.deathroll_minimum = 500.0
+        self.DEATHROLL_WAIT_TIME = 30
+        self.DEATHROLL_MIN_PLAYERS = 2
+        self.deathroll_current = 0
+        self.deathroll_user_ids = []
+        self.deathroll_ready = False
+        self.deathroll_current_player = ''
 
     def add_gamblestat(self, bet_name="Bet", user_id="0", win=True, amount=0):
         try:
@@ -78,6 +87,91 @@ class Gambling(commands.Cog):
         except:
             print(Exception)
 
+    async def on_message(self, message):
+        if message.author.id == self.bot.user.id:
+            if message.content.lower().startswith("deathroll: "):
+                roll_position = self.deathroll_buyin
+                wait_time = self.DEATHROLL_WAIT_TIME
+                user_count = 0
+                for second in range(wait_time, 0, -5):
+                    user_count = len(self.deathroll_users)
+                    msg = self.deathroll_status + f'{user_count}/{self.DEATHROLL_MIN_PLAYERS} Users are Interested ... {second} seconds to go' + f'```Type !deathroll to participate.\n{self.deathroll_users}```'
+                    await message.edit(content=msg)
+                    await asyncio.sleep(5)
+                if user_count >= self.DEATHROLL_MIN_PLAYERS:
+                    deathroll_total = self.deathroll_buyin * len(self.deathroll_users) * 1.5
+                    self.deathroll_status = f"Deathrolling for {deathroll_total:.0f} ({self.deathroll_buyin} buy-in): ```"
+                    self.deathroll_current = self.deathroll_buyin
+                    while len(self.deathroll_users) > 1:
+                        for user in self.deathroll_users:
+                            self.deathroll_current_player = user
+                            for second in range(wait_time, -1, -1):
+                                if self.deathroll_ready or second <= 0:
+                                    roll = random.randint(1, self.deathroll_current)
+                                    self.deathroll_status = self.deathroll_status + f"{user}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f} \n"
+                                    await message.channel.send(
+                                        f"{user}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f}",
+                                        delete_after=10.0)
+                                    if roll == 1:
+                                        self.deathroll_status = self.deathroll_status + f"{user} is out!\n"
+                                        index = self.deathroll_users.index(user)
+                                        del self.deathroll_user_ids[index]
+                                        self.deathroll_users.remove(user)
+                                    else:
+                                        self.deathroll_current = roll
+                                    msg = self.deathroll_status + '```'
+                                    self.deathroll_ready = False
+                                    break;
+                                else:
+                                    msg = self.deathroll_status + f"{user}'s turn... {second} seconds till auto-roll." + '```'
+                                await message.edit(content=msg)
+                                await asyncio.sleep(1)
+                    self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[0]} is the last survivor, takes the pot {deathroll_total}\n"
+                    msg = self.deathroll_status + '```'
+                    await message.edit(content=msg)
+                    await asyncio.sleep(3)
+                    self.deathroll_status = self.deathroll_status + "\n ________________________________________\n" \
+                                                                    "/ {:^38} \\\n\________________________________________/\n      " \
+                                                                    "        ...        /\n             ;::::;    " \
+                                                                    " /\n           ;::::; :;   /\n         " \
+                                                                    ";:::::'   :; /\n        ;:::::;     ;/\n     " \
+                                                                    "  ,:::::'      /;           OOO\n       " \
+                                                                    "::::::;     / ;          OOOOO\n       " \
+                                                                    ";:::::;       ;         OOOOOOOO\n      ," \
+                                                                    ";::::::;     ;'         / OOOOOOO\n    " \
+                                                                    ";:::::::::`. ,,,;.        /  / DOOOOOO\n  " \
+                                                                    ".';:::::::::::::::::;,     /  /     DOOOO\n " \
+                                                                    ",::::::;::::::;;;;::::;,   /  /        " \
+                                                                    "DOOO\n;`::::::`'::::::;;;::::: ,#/  /        " \
+                                                                    "  DOOO\n:`:::::::`;::::::;;::: ;::#  /       " \
+                                                                    "     DOOO\n::`:::::::`;:::::::: ;::::# /     " \
+                                                                    "         DOO\n`:`:::::::`;:::::: ;::::::#/   " \
+                                                                    "            DOO\n :::`:::::::`;; " \
+                                                                    ";:::::::::##                OO\n " \
+                                                                    "::::`:::::::`;::::::::;:::#                " \
+                                                                    "OO\n `:::::`::::::::::::;'`:;::#             " \
+                                                                    "   O\n  `:::::`::::::::;' /  / `:#\n   " \
+                                                                    "::::::`:::::;'  /  /   `#".format(
+                        self.deathroll_users[0] + ' wins this round...')
+                    msg = self.deathroll_status + '```'
+                    await message.edit(content=msg)
+                    await asyncio.sleep(1)
+                    self.bot.get_cog('Currency').add_user_currency(self.deathroll_user_ids[0], deathroll_total)
+                    # self.add_gamblestat("Deathroll", self.deathroll_user_ids[0], True, deathroll_total)
+                    self.deathroll_status = ''
+                    self.deathroll_users = []
+                    self.deathroll_user_ids = []
+                    self.deathroll_current_player = ''
+                else:
+                    await message.edit(content="Deathroll: CANCELLED: Only {} users joined. ".format(
+                        user_count) + "Requires {} users to start.".format(self.DEATHROLL_MIN_PLAYERS))
+                    for user in self.deathroll_user_ids:
+                        self.bot.get_cog('Currency').add_user_currency(user, self.deathroll_buyin)
+                    self.deathroll_buyin = 0
+                    self.deathroll_status = ''
+                    self.deathroll_users = []
+                    self.deathroll_user_ids = []
+
     @commands.command(aliases=["mybets", "mygambles", "my_gamble_stats"])
     async def usergamblestats(self, ctx):
         """!mybets or !mygambles"""
@@ -98,6 +192,59 @@ class Gambling(commands.Cog):
             msg += f'{gamble}: {self.gambling_history[gamble]}\n'
         message = await ctx.send(msg, delete_after=self.bot.LONG_DELETE_DELAY)
 
+    @commands.command(aliases=["dr", "Dr", "DR"])
+    async def deathroll(self, ctx):
+        """!Deathroll [amt]"""
+        bet_string = ctx.message.content.split(' ')
+        bet_user = str(ctx.author)
+        bet_user_id = str(ctx.author.id)
+        bet_side = bet_string[0]
+        print(bet_user_id, self.deathroll_user_ids)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+        if bet_user_id in self.deathroll_user_ids:
+            if bet_user == self.deathroll_current_player:
+                self.deathroll_ready = True  # skip the afk timer
+            else:
+                await ctx.channel.send("Wait your Turn!", delete_after=5.0)
+        else:
+            bet_amount = self.deathroll_minimum
+            if self.deathroll_status != '':
+                bet_amount = self.deathroll_buyin
+            else:
+                try:
+                    bet_amount = max(self.deathroll_minimum, float(bet_string[1]))
+                except IndexError:
+                    bet_amount = self.deathroll_minimum
+                self.deathroll_buyin = bet_amount
+            user_balance = self.bot.get_cog('Currency').get_user_currency(bet_user_id)
+            valid_bet = False
+            if float(user_balance) >= float(bet_amount):
+                if float(bet_amount) >= self.deathroll_minimum:
+                    valid_bet = True
+                    self.bot.get_cog('Currency').remove_user_currency(bet_user_id, bet_amount)
+                else:
+                    valid_bet = False
+                    msg = f'Deathroll: Invalid - Deathrolling only allowed above {self.deathroll_minimum}'
+                    await ctx.send(msg, delete_after=self.bot.SHORT_DELETE_DELAY)
+            else:
+                valid_bet = False
+                bet_amount = max(self.deathroll_minimum, self.deathroll_buyin)
+                msg = f'Deathroll: Invalid - You need to have {bet_amount} to join.'
+                await ctx.send(msg, delete_after=10)
+            if valid_bet:  # User placed a valid bet/has enough currency.
+                """!deathroll - Starts a deathroll Request"""
+                if self.deathroll_status == '':
+                    msg = f'Deathroll: REQUESTED: ({bet_amount:.0f} buy-in, >= ${bet_amount * max(len(self.deathroll_users), 1) * 1.5:.0f} pot): '
+                    self.deathroll_status = msg
+                    self.deathroll_users.append(str(ctx.author))
+                    self.deathroll_user_ids.append(str(ctx.author.id))
+                    await ctx.channel.send(msg)
+                elif self.deathroll_status.startswith('Deathroll: REQUESTED: '):
+                    if not str(ctx.author) in self.deathroll_users:
+                        self.deathroll_users.append(str(ctx.author))
+                        self.deathroll_user_ids.append(str(ctx.author.id))
+                        await ctx.channel.send(f"{bet_user} is joining the Deathroll!", delete_after=10.0)
+
     @commands.command(aliases=["heads", "tails"])
     async def gamble(self, ctx):
         """!heads [amount] and !tails [amount]"""
@@ -115,7 +262,7 @@ class Gambling(commands.Cog):
         if len(bet_string) < 2:
             bet_amount = 1
         if float(user_balance) >= float(bet_amount) > 0.0:
-            valid_bet = True;
+            valid_bet = True
             self.bot.get_cog('Currency').remove_user_currency(bet_user_id, bet_amount)
         if valid_bet:
             msg = f'Coin Toss:  {ctx.author} bets {bet_amount} on {bet_side}...'
