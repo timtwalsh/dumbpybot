@@ -103,27 +103,29 @@ class Gambling(commands.Cog):
                     self.deathroll_status = f"Deathrolling for {deathroll_total:.0f} ({self.deathroll_buyin} buy-in): ```"
                     self.deathroll_current = self.deathroll_buyin
                     while len(self.deathroll_users) > 1:
-                        for user in self.deathroll_users:
-                            self.deathroll_current_player = user
+                        user_index = 0
+                        while user_index < len(self.deathroll_users):
+                            self.deathroll_current_player = self.deathroll_users[user_index]
                             for second in range(wait_time, -1, -1):
                                 if self.deathroll_ready or second <= 0:
                                     roll = random.randint(1, self.deathroll_current)
-                                    self.deathroll_status = self.deathroll_status + f"{user}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f} \n"
+                                    self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[user_index]}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f} \n"
                                     await message.channel.send(
-                                        f"{user}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f}",
+                                        f"{self.deathroll_users[user_index]}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f}",
                                         delete_after=10.0)
                                     if roll == 1:
-                                        self.deathroll_status = self.deathroll_status + f"{user} is out!\n"
-                                        index = self.deathroll_users.index(user)
+                                        self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[user_index]} is out!\n"
+                                        index = self.deathroll_users.index(self.deathroll_users[user_index])
                                         del self.deathroll_user_ids[index]
-                                        self.deathroll_users.remove(user)
+                                        self.deathroll_users.remove(self.deathroll_users[user_index])
                                     else:
                                         self.deathroll_current = roll
+                                        user_index += 1
                                     msg = self.deathroll_status + '```'
                                     self.deathroll_ready = False
                                     break
                                 else:
-                                    msg = self.deathroll_status + f"{user}'s turn... {second} seconds till auto-roll." + '```'
+                                    msg = self.deathroll_status + f"{self.deathroll_users[user_index]}'s turn... {second} seconds till auto-roll." + '```'
                                 await message.edit(content=msg)
                                 await asyncio.sleep(1)
                     self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[0]} is the last survivor, takes the pot {deathroll_total}\n"
