@@ -1,10 +1,6 @@
 import json
-from datetime import datetime
 from json import JSONEncoder
-from operator import itemgetter
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import datetime as dt
 import matplotlib.dates as mdates
 
