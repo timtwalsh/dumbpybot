@@ -27,9 +27,9 @@ class Gambling(commands.Cog):
         self.deathroll_users = []
         self.deathroll_status = ''
         self.deathroll_minimum = 500.0
-        self.DEATHROLL_WAIT_TIME = 30
+        self.DEATHROLL_WAIT_TIME = 15
         self.DEATHROLL_MIN_PLAYERS = 2
-        self.deathroll_current = 0
+        self.deathroll_max = 0
         self.deathroll_user_ids = []
         self.deathroll_ready = False
         self.deathroll_current_player = ''
@@ -93,33 +93,39 @@ class Gambling(commands.Cog):
                 roll_position = self.deathroll_buyin
                 wait_time = self.DEATHROLL_WAIT_TIME
                 user_count = 0
-                for second in range(wait_time, 0, -5):
+                for second in range(wait_time * 2, 0, -5):
                     user_count = len(self.deathroll_users)
+                    self.deathroll_status = f'Deathroll: REQUESTED: ({self.deathroll_buyin:.0f} buy-in, (+1 User = ${(user_count + 1) * (self.deathroll_buyin * (1 + min(min(max(0, len(self.deathroll_users) - 1), 4) * .2, 0.5))):.0f} pot)): '
                     msg = self.deathroll_status + f'{user_count}/{self.DEATHROLL_MIN_PLAYERS} Users are Interested ... {second} seconds to go' + f'```Type !deathroll to participate.\n{self.deathroll_users}```'
                     await message.edit(content=msg)
                     await asyncio.sleep(5)
+                user_count = len(self.deathroll_users)
                 if user_count >= self.DEATHROLL_MIN_PLAYERS:
-                    deathroll_total = self.deathroll_buyin * len(self.deathroll_users) * 1.5
+                    deathroll_total = self.deathroll_buyin * user_count + self.deathroll_buyin * user_count * (
+                        +min(min(max(0, user_count - 2), 4) * .2, 0.5))
                     self.deathroll_status = f"Deathrolling for {deathroll_total:.0f} ({self.deathroll_buyin} buy-in): ```"
-                    self.deathroll_current = self.deathroll_buyin
+                    self.deathroll_max = self.deathroll_buyin
                     while len(self.deathroll_users) > 1:
+                        print(self.deathroll_users)
                         user_index = 0
-                        while user_index < len(self.deathroll_users):
+                        while user_index < len(self.deathroll_users) and len(self.deathroll_users) > 1:
                             self.deathroll_current_player = self.deathroll_users[user_index]
                             for second in range(wait_time, -1, -1):
                                 if self.deathroll_ready or second <= 0:
-                                    roll = random.randint(1, self.deathroll_current)
-                                    self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[user_index]}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f} \n"
+                                    roll = random.randint(1, self.deathroll_max)
+                                    self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[user_index]}'s rolls 1-{self.deathroll_max:.0f}... drops a {roll:.0f} \n"
                                     await message.channel.send(
-                                        f"{self.deathroll_users[user_index]}'s rolls 1-{self.deathroll_current:.0f}... drops a {roll:.0f}",
+                                        f"{self.deathroll_users[user_index]}'s rolls 1-{self.deathroll_max:.0f}... drops a {roll:.0f}",
                                         delete_after=10.0)
                                     if roll == 1:
                                         self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[user_index]} is out!\n"
-                                        index = self.deathroll_users.index(self.deathroll_users[user_index])
-                                        del self.deathroll_user_ids[index]
+                                        print("del", self.deathroll_user_ids[user_index])
+                                        del self.deathroll_user_ids[user_index]
+                                        print("Remove", self.deathroll_users[user_index])
                                         self.deathroll_users.remove(self.deathroll_users[user_index])
+                                        print(self.deathroll_users, self.deathroll_user_ids)
                                     else:
-                                        self.deathroll_current = roll
+                                        self.deathroll_max = roll
                                         user_index += 1
                                     msg = self.deathroll_status + '```'
                                     self.deathroll_ready = False
@@ -235,7 +241,7 @@ class Gambling(commands.Cog):
             if valid_bet:  # User placed a valid bet/has enough currency.
                 """!deathroll - Starts a deathroll Request"""
                 if self.deathroll_status == '':
-                    msg = f'Deathroll: REQUESTED: ({bet_amount:.0f} buy-in, >= ${bet_amount * max(len(self.deathroll_users), 1) * 1.5:.0f} pot): '
+                    msg = f'Deathroll: REQUESTED: ({bet_amount:.0f} buy-in, (+1 User = ${bet_amount * (1 + min(min(max(0, len(self.deathroll_users) - 1), 4) * .2, 0.5)):.0f} pot)): '
                     self.deathroll_status = msg
                     self.deathroll_users.append(str(ctx.author))
                     self.deathroll_user_ids.append(str(ctx.author.id))
