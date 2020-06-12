@@ -309,7 +309,7 @@ class Investment(commands.Cog):
                     fig.suptitle("All Stock Values, Last 7 days", fontsize=12, y=.95)
                     plt.draw()
                     plt.savefig('7days.png')
-                    plt.show()
+                    # plt.show()
                     print("Updated 7 day chart")
                 # 8 hours 3x3 plot
                 if len(self.price_history[-1]) > 24:  # ensure we have enough price history
@@ -333,7 +333,7 @@ class Investment(commands.Cog):
                     fig.suptitle("All Stock Values, Last 8 hours", fontsize=12, y=.95)
                     plt.draw()
                     plt.savefig('8hours.png')
-                    plt.show()
+                    # plt.show()
                     print("Updated 8 hour chart")
                 await self.save_data()
                 self.investment_ticker = 0
