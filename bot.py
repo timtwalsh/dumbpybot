@@ -18,9 +18,8 @@ JSONEncoder.default = _default
 DEBUG = False
 TOKEN = config.TOKEN
 BOT_PREFIX = "!"
-ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.ActivityStats', 'Extensions.Gambling', 'Extensions.Misc',
-                     'Extensions.HorseRace']
-
+ACTIVE_EXTENSIONS = ['Extensions.Currency', 'Extensions.Investment', 'Extensions.ActivityStats', 'Extensions.Gambling',
+                     'Extensions.Misc', 'Extensions.HorseRace']
 
 class Context(commands.Context):
     async def tick(self, value):
