@@ -13,6 +13,7 @@ import random
 from discord.ext import tasks, commands
 
 DEBUG = True
+DEBUG_TICKER = False
 TICK_RATE = 6  # Default
 emoji_letters_dict = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭', 'I': '🇮',
                       'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶', 'R': '🇷',
@@ -34,10 +35,9 @@ company_default_tickers = ['HANDJB', 'BLUBLS', 'FATCNT',
 company_default_volatility = [0.75, 0.75, 0.75,
                               1.0, 1.0, 1.0,
                               1.25, 1.25, 1.25]
-company_default_description = ["Low Risk", "Low Risk", "Low Risk",
-                               "Medium Risk", "Medium Risk", "Medium Risk",
-                               "High Risk", "High Risk",
-                               "High Risk"]  # based on the risk factor (0.33 = low, .5 = med, 1.0 = high
+company_default_description = ["Low Risk", "Low Risk", "Low Risk",  # based on the risk factor
+                               "Medium Risk", "Medium Risk", "Medium Risk",  # (0.33 = low, .5 = med, 1.0 = high )
+                               "High Risk", "High Risk", "High Risk"]
 company_default_price = [500, 100, 1000,
                          1000, 500, 100,
                          500, 1000, 100]
@@ -45,7 +45,7 @@ company_default_colours = ['#FFE4B5', '#4169E1', '#333333',
                            '#FF0000', '#9400D3', '#FFD700',
                            '#32CD32', '#800000', '#008B8B']
 BASE_VOLATILITY = 0.025
-INVESTMENT_TICKRATE = 6  # 900 = 15 minute update rate
+INVESTMENT_TICKRATE = 60  # 900 = 15 minute update rate
 
 
 def _default(self, obj):
@@ -69,6 +69,7 @@ class Investment(commands.Cog):
         self.company_volatility = []
         self.price_history = []
         self.all_company_details = []
+        self.stock_holdings = {}
         self.recent_trades = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.time_elapsed = 0
         # save
@@ -79,53 +80,77 @@ class Investment(commands.Cog):
         #     print(json.dump(self.all_company_details, out_file, sort_keys=False, indent=4))
         # load
 
-    def get_investors(self, ticker=""):
-        if ticker != "":
-            return self.stock_holders[ticker]
+    def get_investments(self, user_id=""):
+        if user_id != "":
+            return self.stock_holdings[user_id]
         else:
-            print("Error, must specify a ticker")
+            print("Error, must specify a user_id")
             return False
 
     def sell_investment(self, user_id="", ticker="", amount=0):
         """ sells investments gives currency to user balance, returns true if sale completed """
-        if ticker != "":
-            company_index = self.company_tickers.index(ticker)
-            if user_id != "":
-                if ticker in self.stock_holders:
-                    if user_id in self.stock_holders[ticker]:
-                        if self.stock_holders[ticker][user_id] >= amount:
-                            self.stock_holders[ticker][user_id] -= amount
-                            currency_earned = self.company_prices[company_index] * amount
-                            self.bot.get_cog('Currency').add_user_currency(user_id, currency_earned)
-                            return True
+        try:
+            if DEBUG: print(f"{user_id} selling {amount} of {ticker}")
+            if ticker != "":
+                if user_id != "":
+                    print(self.stock_holdings, user_id)
+                    if user_id in self.stock_holdings:
+                        if ticker in self.stock_holdings[user_id]:
+                            current_stock = self.stock_holdings[user_id][ticker]
+                            if current_stock >= amount:
+                                current_stock_price = self.company_prices[self.company_tickers.index(ticker)]
+                                price = amount * current_stock_price
+                                self.stock_holdings[user_id][ticker] = current_stock - amount
+                                self.bot.get_cog('Currency').add_user_currency(user_id, price)
+                                return f"Sale Complete```SOLD: {amount} {ticker} for {price:.2f}\n" \
+                                       f"You now hold {current_stock - amount} worth {(current_stock - amount) * current_stock_price:.2f}```"
+                            else:
+                                return f"Not enough {ticker}"
                         else:
-                            print(f"{user_id} doesn't have {amount} {ticker}.")
-                            return False
-
+                            return f"You don't have any {ticker}"
+                    else:
+                        return f"{ticker} doesn't Exist."
+                else:
+                    print("Error, must specify a user_id.")
+                    return False
             else:
-                print("Error, must specify a user_id.")
+                print("Error, must specify a ticker.")
                 return False
-        else:
-            print("Error, must specify a ticker.")
-            return False
+        except ValueError:
+            return f"{ticker} doesn't Exist."
 
     def buy_investment(self, user_id="", ticker="", amount=0):
         """ Buys investment, removes currency from user balance, returns true if purchase completed """
-        if ticker != "":
-            if user_id != "":
-                if ticker in self.stock_holders:  # is it a valid ticker
-                    if user_id in self.stock_holders[ticker]:
-                        current_stock = self.stock_holders[ticker][user_id]
+        if DEBUG: print(f"{user_id} buying {amount} of {ticker}")
+        try:
+            if ticker != "":
+                if user_id != "":
+                    print(self.stock_holdings)
+                    current_stock = 0
+                    if user_id in self.stock_holdings:
+                        if ticker in self.stock_holdings[user_id]:
+                            current_stock = self.stock_holdings[user_id][ticker]
                     else:
-                        current_stock = 0
+                        self.stock_holdings[user_id] = {}
                     user_balance = self.bot.get_cog('Currency').get_user_currency(user_id)
-                    self.stock_holders[ticker][user_id] = current_stock + amount
+                    current_stock_price = self.company_prices[self.company_tickers.index(ticker)]
+                    price = amount * current_stock_price
+                    if user_balance >= price:
+                        self.bot.get_cog('Currency').remove_user_currency(user_id, price)
+                        self.stock_holdings[user_id][ticker] = current_stock + amount
+                        return f"Purchase Completed```BROUGHT: {amount} of {ticker} for {price:.2f} ({current_stock_price:.2f} ea)\n" \
+                               f"You now hold {amount + current_stock} {ticker} worth {(amount + current_stock) * current_stock_price:.2f}```"
+                    else:
+                        return f"You don't have enough, you need {price:.2f} but have {user_balance:.2f}"
+
+                else:
+                    print("Error, must specify a user_id.")
+                    return False
             else:
-                print("Error, must specify a user_id.")
+                print("Error, must specify a ticker.")
                 return False
-        else:
-            print("Error, must specify a ticker.")
-            return False
+        except ValueError:
+            return f"{ticker} doesn't Exist."
 
     async def load_data(self):
         try:
@@ -142,6 +167,10 @@ class Investment(commands.Cog):
                         [self.company_tickers[i], self.company_names[i], self.company_desc[i],
                          self.company_prices[i], self.price_history[i]])
                 print(f"Loaded {len(self.all_company_details)} Companies.")
+            with open(f'{self.qualified_name}_users.json', 'r+') as in_file:
+                user = json.load(in_file)
+                self.stock_holdings = user
+                print(f"Loaded {len(self.stock_holdings)} Users Stock Holdings.")
         except FileNotFoundError:  # file doesn't exist, init all members with 0 currency to avoid index errors
             for i, ticker in enumerate(company_default_tickers):
                 print(i, ticker)
@@ -161,17 +190,69 @@ class Investment(commands.Cog):
                                              self.price_history[i]])
         with open(f'{self.qualified_name}_data.json', 'w+') as out_file:
             print(json.dump(self.all_company_details, out_file, sort_keys=False, indent=4))
+        with open(f'{self.qualified_name}_users.json', 'w+') as out_file:
+            print(json.dump(self.stock_holdings, out_file, sort_keys=False, indent=4))
+
+    @commands.command(name="buy investments", aliases=["buy"])
+    async def buy(self, ctx, ticker: str, amount: int):
+        """!buy"""
+        user_id = ctx.author.id
+        outcome = self.buy_investment(user_id=str(user_id), ticker=ticker.upper(), amount=abs(amount))
+        await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+
+    @commands.command(name="sell investments", aliases=["sell"])
+    async def sell(self, ctx, ticker: str, amount: int):
+        """!sell"""
+        user_id = ctx.author.id
+        outcome = self.sell_investment(user_id=str(user_id), ticker=ticker.upper(), amount=abs(amount))
+        await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+
+    @commands.command(name="price check", aliases=["pc", "week", "day"])
+    async def check(self, ctx, chart: str):
+        """chart prices"""
+        if chart.startswith("now") or chart.startswith("current"):
+            msg = "Stock Prices:```"
+            msg += f"{'Stock':<20} | {'Price':<20}\n"
+            msg += f"---------------------------------------\n"
+            for i, stock in enumerate(self.company_names):
+                msg += f"{stock:<20} | {self.company_prices[i]:<20}\n"
+            msg += "```"
+            await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        if chart.startswith("day") or chart.startswith("8"):
+            await ctx.channel.send(file=discord.File('8hours.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        elif chart.startswith("week") or chart.startswith("7"):
+            await ctx.channel.send(file=discord.File('7days.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+
+    @commands.command(name="stocks", aliases=["stocklist"])
+    async def stocks(self, ctx):
+        """chart prices"""
+        msg = "Company Details:```"
+        msg += f"{'Name':<30} | {'Desc':<15} | {'Price':<20}\n"
+        msg += f"-----------------------------------------------------------------\n"
+        for i, stock in enumerate(self.company_names):
+            msg += f"{self.company_names[i] + ' (' + self.company_tickers[i] + ')':<30} | {self.company_desc[i]:<15} | {self.company_prices[i]:<20.2f}\n"
+        msg += "```"
+        await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="investments", aliases=["myinv", "my inv", "myinvestments", "userinv", "user inv"])
     async def investments(self, ctx, *, member: discord.Member = None):
         """!myinv or userinv [user]"""
-        member = member or ctx.author
-        # currency = self.member_currency[str(member.id)]
-        # currency_name = self.bot.CURRENCY_NAME if 2 > currency >= 1 else self.bot.CURRENCY_NAME + 's'
-        # msg = f"{member.mention} has {currency:.2f} {currency_name}"
-        # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
-        # await ctx.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
-        # await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+        user_id = ctx.author.id
+        if member != None:
+            user_id = member.id
+        investments = self.get_investments(user_id=str(user_id))
+        msg = "Current Investments:```"
+        msg += f"{'Investment':<20} | {'Holding':<10} | {'Value':<15}\n"
+        msg += "---------------------------------------------------\n"
+        for investment in investments.keys():
+            msg += f"{investment:<20} | {investments[investment]:<10} | {self.company_prices[self.company_tickers.index(investment)] * investments[investment]:<15.2f}\n"
+        msg += '```'
+        await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     async def timeout(self):
         debug_channel = self.bot.get_channel(self.bot.DEBUG_CHANNEL)
@@ -179,16 +260,16 @@ class Investment(commands.Cog):
         if not self.bot.is_closed() and len(self.company_tickers) > 0:
             if self.investment_ticker >= INVESTMENT_TICKRATE:
                 for i, company in enumerate(self.company_tickers):
-                    if DEBUG:
+                    if DEBUG_TICKER:
                         print(company)
                     previous_price = self.company_prices[i]
                     company_volatility = self.company_volatility[i]
                     current_momentum = 0
-                    if DEBUG:
+                    if DEBUG_TICKER:
                         print("HISTORY:: ", end=" ")
                     for j in range(len(self.price_history[i]) - 8, len(self.price_history[i])):
                         current_momentum += self.price_history[i][j] / self.price_history[i][j - 1]
-                        if DEBUG:
+                        if DEBUG_TICKER:
                             print(f"{self.price_history[i][j]:.2f}", end=",")
                     current_momentum = round(current_momentum / 8, 5) - 1
                     if self.recent_trades[i] != 0:
@@ -201,49 +282,64 @@ class Investment(commands.Cog):
                     total_change = max(min(current_momentum / 2, BASE_VOLATILITY), -BASE_VOLATILITY) + max(
                         min(random_fluctuation, BASE_VOLATILITY), -BASE_VOLATILITY)
                     next_price = round(previous_price * (1 + total_change), 5)
-                    print("total_change ", total_change, " random ", random_fluctuation, " momentum ", current_momentum)
-                    if DEBUG:
+                    if DEBUG_TICKER:
+                        print("total_change ", total_change, " random ", random_fluctuation, " momentum ",
+                              current_momentum)
                         print(f"Momentum {current_momentum:.3f}, Total_Change = {random_fluctuation:.5f}")
                         print(previous_price, " -> ", next_price)
                     self.company_prices[i] = max(next_price, 1)
                     self.price_history[i].append(previous_price)
-                if self.time_elapsed % 60 == 0:
-                    # 8 hour 3x3 plot
-                    if len(self.price_history[-1]) > 24:  # ensure we have enough price history
-                        my_timeperiods = [dt.datetime.now() - (dt.timedelta(minutes=15 * i)) for i in range(24, 0, -1)]
-                        stock = []
-                        leg = []
-                        print(1)
-                        for i, history in enumerate(self.price_history):
-                            stock.append(self.price_history[i][-24:])
-                            leg.append(self.company_tickers[i][-24:])
-                        # my_series = pd.Series(self.price_history[-1], index=my_timeperiods)
-                        # my_series_two = pd.Series(self.price_history[-4], index=my_timeperiods)
-                        # frame = {self.company_names[-1]: my_series,self.company_names[-4]: my_series_two}
-                        date_format = mdates.DateFormatter('%a %H:%M')
-                        fig, ax = plt.subplots(3, 3, sharex=True, squeeze=False)
-                        print(2)
-                        for x in range(3):
-                            for y in range(3):
-                                index = y * 3 + x
-                                ax[x, y].plot(my_timeperiods, stock[index], color=company_default_colours[index],
-                                              label=leg[index])
-                                ax[x, y].xaxis.set_major_formatter(date_format)
-                                ax[x, y].tick_params(axis='both', which='major', labelsize=8)
-                                ax[x, y].legend(loc="best")
-                        fig.autofmt_xdate()
-                        print(3)
-                        fig.suptitle("All Stock Values, Last 8 hours", fontsize=12, y=1)
-                        plt.figure(num=None, figsize=(40, 20))
-                        fig = ax.flatten()[0].figure
-                        s = fig.subplotpars
-                        w, h = fig.get_size_inches()
-                        figh = h - (1 - s.top) * h + 1
-                        fig.subplots_adjust(bottom=s.bottom * h / figh, top=1 / figh)
-                        fig.set_figheight(figh)
-                        plt.show()
-                        plt.savefig('8hour.png')
-                        print(4)
+                    if len(self.price_history[i]) > 700:
+                        self.price_history[i] = self.price_history[i][-700:]
+                # 7 days 3x3 plot
+                if len(self.price_history[-1]) > 672:  # ensure we have enough price history
+                    my_timeperiods = [dt.datetime.now() - (dt.timedelta(minutes=15 * i)) for i in range(672, 0, -1)]
+                    stock = []
+                    leg = []
+                    for i, history in enumerate(self.price_history):
+                        stock.append(self.price_history[i][-672:])
+                        leg.append(self.company_tickers[i][-672:])
+                    date_format = mdates.DateFormatter('%a %d/%m/%y')
+                    fig, ax = plt.subplots(3, 3, sharex=True, squeeze=False)
+                    for x in range(3):
+                        for y in range(3):
+                            index = y * 3 + x
+                            ax[x, y].plot(my_timeperiods, stock[index], color=company_default_colours[index],
+                                          label=leg[index])
+                            ax[x, y].xaxis.set_major_formatter(date_format)
+                            ax[x, y].tick_params(axis='both', which='major', labelsize=6)
+                            ax[x, y].legend(loc="best")
+                    fig.autofmt_xdate()
+                    fig.suptitle("All Stock Values, Last 7 days", fontsize=12, y=.95)
+                    plt.draw()
+                    plt.savefig('7days.png')
+                    plt.show()
+                    print("Updated 7 day chart")
+                # 8 hours 3x3 plot
+                if len(self.price_history[-1]) > 24:  # ensure we have enough price history
+                    my_timeperiods = [dt.datetime.now() - (dt.timedelta(minutes=15 * i)) for i in range(24, 0, -1)]
+                    stock = []
+                    leg = []
+                    for i, history in enumerate(self.price_history):
+                        stock.append(self.price_history[i][-24:])
+                        leg.append(self.company_tickers[i][-24:])
+                    date_format = mdates.DateFormatter('%a %H:%M')
+                    fig, ax = plt.subplots(3, 3, sharex=True, squeeze=False)
+                    for x in range(3):
+                        for y in range(3):
+                            index = y * 3 + x
+                            ax[x, y].plot(my_timeperiods, stock[index], color=company_default_colours[index],
+                                          label=leg[index])
+                            ax[x, y].xaxis.set_major_formatter(date_format)
+                            ax[x, y].tick_params(axis='both', which='major', labelsize=8)
+                            ax[x, y].legend(loc="best")
+                    fig.autofmt_xdate()
+                    fig.suptitle("All Stock Values, Last 8 hours", fontsize=12, y=.95)
+                    plt.draw()
+                    plt.savefig('8hours.png')
+                    plt.show()
+                    print("Updated 8 hour chart")
+                await self.save_data()
                 self.investment_ticker = 0
             self.time_elapsed += self.bot.TICK_RATE
             self.investment_ticker += self.bot.TICK_RATE
