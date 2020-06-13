@@ -6,12 +6,16 @@ from operator import itemgetter
 import discord
 import random
 from discord.ext import tasks, commands
+from discord.utils import get
 
 DEBUG = False
 TICK_RATE = 6  # Default
-emoji_letters_dict = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭', 'I': '🇮',
-                      'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶', 'R': '🇷',
-                      'S': '🇸', 'T': '🇹', 'U': '🇺', 'V': '🇻', 'W': '🇼', 'X': '🇽', 'Y': '🇾', 'Z': '🇿', ' ': '✴'}
+LETTERS_TO_EMOJI_ASCII = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭',
+                          'I': '🇮',
+                          'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶',
+                          'R': '🇷',
+                          'S': '🇸', 'T': '🇹', 'U': '🇺', 'V': '🇻', 'W': '🇼', 'X': '🇽', 'Y': '🇾', 'Z': '🇿',
+                          ' ': '✴'}
 
 
 def _default(self, obj):
@@ -84,6 +88,14 @@ class Currency(commands.Cog):
             with open(f'{self.qualified_name}_data.json', 'w+') as out_file:
                 json.dump(save_data, out_file, sort_keys=False, indent=4)
 
+    @commands.command(name="joingame", aliases=["join"])
+    async def join(self, ctx):
+        """Joins the Game, allowing currency to be earned."""
+        member = ctx.message.author
+        role = discord.utils.get(ctx.guild.roles, name="game")
+        # role = discord.utils.get(member.guild.roles, name="Bots")
+        await member.add_roles(role)
+
     @commands.command(name="mycurrency", aliases=["my$", "my $", "my$hekels", "user$", "user $"])
     async def mycurrency(self, ctx, *, member: discord.Member = None):
         """!my$ or user$ [user]"""
@@ -118,31 +130,35 @@ class Currency(commands.Cog):
         log_channel = self.bot.get_channel(self.bot.LOG_CHANNEL)
         if not self.bot.is_closed() and len(self.member_currency) > 0:
             for member in self.bot.get_all_members():
-                if str(member.id) not in self.member_currency.keys():
-                    print("New Member:", member)
-                    self.member_currency[str(member.id)] = 0.0
-                    current_member_currency = 0.0
-                else:
-                    current_member_currency = self.member_currency[str(member.id)]
-                # Apply Activity Bonuses to encourage member participation
-                cumulative_activity_bonus = 1
-                if member.activity is not None:
-                    cumulative_activity_bonus += self.ACTIVITY_BONUS
-                if member.voice is not None:
-                    cumulative_activity_bonus += self.VOICE_BONUS
+                if len(member.roles) > 1:
+                    for role in member.roles:
+                        if role.name == 'game':
+                            print('gamer')
+                            if str(member.id) not in self.member_currency.keys():
+                                print("New Member:", member)
+                                self.member_currency[str(member.id)] = 0.0
+                                current_member_currency = 0.0
+                            else:
+                                current_member_currency = self.member_currency[str(member.id)]
+                            # Apply Activity Bonuses to encourage member participation
+                            cumulative_activity_bonus = 1
+                            if member.activity is not None:
+                                cumulative_activity_bonus += self.ACTIVITY_BONUS
+                            if member.voice is not None:
+                                cumulative_activity_bonus += self.VOICE_BONUS
 
-                # Apply Happy Hour Bonus, 6pm-midnight on weekdays, all hours on Saturday/Sunday
-                weekday = datetime.today().weekday()
-                hour = datetime.today().hour + datetime.today().minute / 60
-                if weekday >= 5:
-                    cumulative_activity_bonus += self.HAPPY_HOUR_BONUS
-                else:
-                    if 18 <= hour < 24:
-                        cumulative_activity_bonus += self.HAPPY_HOUR_BONUS
-                current_member_currency += self.IDLE_RATE * cumulative_activity_bonus
-                self.member_currency[str(member.id)] = current_member_currency
-                if DEBUG:
-                    print(member.id, member, self.member_currency[str(member.id)], sep=",")
+                            # Apply Happy Hour Bonus, 6pm-midnight on weekdays, all hours on Saturday/Sunday
+                            weekday = datetime.today().weekday()
+                            hour = datetime.today().hour + datetime.today().minute / 60
+                            if weekday >= 5:
+                                cumulative_activity_bonus += self.HAPPY_HOUR_BONUS
+                            else:
+                                if 18 <= hour < 24:
+                                    cumulative_activity_bonus += self.HAPPY_HOUR_BONUS
+                            current_member_currency += self.IDLE_RATE * cumulative_activity_bonus
+                            self.member_currency[str(member.id)] = current_member_currency
+                            if DEBUG:
+                                print(member.id, member, self.member_currency[str(member.id)], sep=",")
             self.time_elapsed += TICK_RATE
 
 
