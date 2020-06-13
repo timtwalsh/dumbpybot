@@ -44,7 +44,7 @@ COMPANY_DEFAULT_COLOURS = ['#FFE4B5', '#4169E1', '#333333',
                            '#FF0000', '#9400D3', '#FFD700',
                            '#32CD32', '#800000', '#008B8B']
 BASE_VOLATILITY = 0.025
-INVESTMENT_TICKRATE = 60  # 900 = 15 minute update rate
+INVESTMENT_TICKRATE = 900  # 900 = 15 minute update rate
 
 
 def _default(self, obj):
@@ -273,7 +273,6 @@ class Investment(commands.Cog):
         debug_channel = self.bot.get_channel(self.bot.DEBUG_CHANNEL)
         log_channel = self.bot.get_channel(self.bot.LOG_CHANNEL)
         if not self.bot.is_closed() and len(self.company_tickers) > 0:
-            print("TICK", self.investment_ticker)
             if self.investment_ticker >= INVESTMENT_TICKRATE:
                 for i, company in enumerate(self.company_tickers):
                     previous_price = self.company_prices[i]
