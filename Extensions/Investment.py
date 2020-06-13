@@ -102,9 +102,11 @@ class Investment(commands.Cog):
                             if current_stock >= amount:
                                 current_stock_price = self.company_prices[self.company_tickers.index(ticker)]
                                 price = amount * current_stock_price
+                                brokerage = price * 0.01
+                                price -= brokerage
                                 self.stock_holdings[user_id][ticker] = current_stock - amount
                                 self.bot.get_cog('Currency').add_user_currency(user_id, price)
-                                return f"Sale Complete```SOLD: {amount} {ticker} for {price:.2f}\n" \
+                                return f"Sale Complete```SOLD: {amount} {ticker} for {price:.2f}, minus {price * 0.99} comission.\n" \
                                        f"You now hold {current_stock - amount} worth {(current_stock - amount) * current_stock_price:.2f}```"
                             else:
                                 return f"Not enough {ticker}"
@@ -204,7 +206,8 @@ class Investment(commands.Cog):
         user_id = str(ctx.author.id)
         ticker = str(ticker).upper()
         amount = abs(amount)
-        outcome = self.buy_investment(user_id=user_id, ticker=ticker, amount=amount)
+        outcome = f"{ctx.author.name} - "
+        outcome += self.buy_investment(user_id=user_id, ticker=ticker, amount=amount)
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(outcome)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
@@ -216,7 +219,8 @@ class Investment(commands.Cog):
         user_id = str(ctx.author.id)
         ticker = str(ticker).upper()
         amount = abs(amount)
-        outcome = self.sell_investment(user_id=user_id, ticker=ticker, amount=amount)
+        outcome = f"{ctx.author.name} - "
+        outcome += self.sell_investment(user_id=user_id, ticker=ticker, amount=amount)
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(outcome)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
