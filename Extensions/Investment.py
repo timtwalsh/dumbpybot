@@ -171,6 +171,7 @@ class Investment(commands.Cog):
                 self.stock_holdings = user
                 print(f"Loaded {len(self.stock_holdings)} Users Stock Holdings.")
         except FileNotFoundError:  # file doesn't exist, init all members with 0 currency to avoid index errors
+            print("File Not Found")
             for i, ticker in enumerate(company_default_tickers):
                 print(i, ticker)
                 self.company_tickers.append(company_default_tickers[i])
@@ -189,8 +190,10 @@ class Investment(commands.Cog):
                                              self.price_history[i]])
         with open(f'{self.qualified_name}_data.json', 'w+') as out_file:
             print(json.dump(self.all_company_details, out_file, sort_keys=False, indent=4))
+            print("Saved Company Data")
         with open(f'{self.qualified_name}_users.json', 'w+') as out_file:
             print(json.dump(self.stock_holdings, out_file, sort_keys=False, indent=4))
+            print("Saved Users Company Data")
 
     @commands.command(name="buy investments", aliases=["buy"])
     async def buy(self, ctx, ticker: str = "", amount: int = 0):
@@ -202,6 +205,7 @@ class Investment(commands.Cog):
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(outcome)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+        await self.save_data()
 
     @commands.command(name="sell investments", aliases=["sell"])
     async def sell(self, ctx, ticker: str = "", amount: int = 0):
@@ -213,6 +217,7 @@ class Investment(commands.Cog):
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(outcome)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
+        await self.save_data()
 
     @commands.command(name="price check", aliases=["pc", "week", "day", "stocks", "stocklist"])
     async def check(self, ctx, chart: str = ""):
@@ -260,7 +265,7 @@ class Investment(commands.Cog):
     async def timeout(self):
         debug_channel = self.bot.get_channel(self.bot.DEBUG_CHANNEL)
         log_channel = self.bot.get_channel(self.bot.LOG_CHANNEL)
-        if not self.bot.is_closed() and len(self.company_tickers) > 0:
+        if not self.bot.is_closed():
             if self.investment_ticker >= INVESTMENT_TICKRATE:
                 for i, company in enumerate(self.company_tickers):
                     if DEBUG_TICKER:
