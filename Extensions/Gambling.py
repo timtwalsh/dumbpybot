@@ -137,6 +137,7 @@ class Gambling(commands.Cog):
                     self.deathroll_status = self.deathroll_status + f"{self.deathroll_users[0]} is the last survivor, takes the pot {deathroll_total}\n"
                     msg = self.deathroll_status + '```'
                     await message.edit(content=msg)
+                    log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
                     await asyncio.sleep(3)
                     winner = "```\n ________________________________________\n" \
                              "/ {:^38} \\\n\________________________________________/\n      " \

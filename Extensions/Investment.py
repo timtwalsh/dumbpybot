@@ -200,6 +200,7 @@ class Investment(commands.Cog):
         amount = abs(amount)
         outcome = self.buy_investment(user_id=user_id, ticker=ticker, amount=amount)
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(outcome)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="sell investments", aliases=["sell"])
@@ -210,6 +211,7 @@ class Investment(commands.Cog):
         amount = abs(amount)
         outcome = self.sell_investment(user_id=user_id, ticker=ticker, amount=amount)
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(outcome)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="price check", aliases=["pc", "week", "day", "stocks", "stocklist"])
