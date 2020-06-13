@@ -41,23 +41,24 @@ class Misc(commands.Cog):
         msg += "```"
         await ctx.send(f'{msg}')
 
-    # @commands.command(name="nopeprevious", aliases=['nopethat'])
-    # async def nopethat(self, ctx, *, member: discord.Member = None):
-    #     """!nopethat"""
-    #     channel = ctx.channel
-    #     async for message in channel.history(limit=10):
-    #         if ctx.author != message.author:
-    #             react_message = message
-    #             break;
-    #     letter_reaction = "NOPE"
-    #     log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(str(react_message.author) + ": " + react_message.content)
-    #     for letter in letter_reaction:
-    #         try:
-    #             await react_message.add_reaction(emoji_letters_dict[letter])
-    #             await log.add_reaction(emoji_letters_dict[letter])
-    #         except discord.HTTPException:
-    #             print(self.qualified_name,"failed to react to Message by:",ctx.author,", Letter:",letter)
-    #     await ctx.message.delete(delay=self.SHORT_DELETE_DELAY)
+    @commands.command(name="nopeprevious", aliases=['nopethat'])
+    async def nopethat(self, ctx, *, member: discord.Member = None):
+        """!nopethat"""
+        channel = ctx.channel
+        async for message in channel.history(limit=10):
+            if ctx.author != message.author:
+                react_message = message
+                break;
+        letter_reaction = "NOPE"
+        log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(
+            str(react_message.author) + ": " + react_message.content)
+        for letter in letter_reaction:
+            try:
+                await react_message.add_reaction(LETTERS_TO_EMOJI_ASCII[letter])
+                await log.add_reaction(LETTERS_TO_EMOJI_ASCII[letter])
+            except discord.HTTPException:
+                print(self.qualified_name, "failed to react to Message by:", ctx.author, ", Letter:", letter)
+        await ctx.message.delete(delay=self.SHORT_DELETE_DELAY)
 
     # @commands.command()
     # async def sadkek(self, ctx):
