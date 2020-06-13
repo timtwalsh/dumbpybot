@@ -215,7 +215,7 @@ class Investment(commands.Cog):
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="price check", aliases=["pc", "week", "day", "stocks", "stocklist"])
-    async def check(self, ctx, chart: str):
+    async def check(self, ctx, chart: str = ""):
         """chart prices"""
         if chart.startswith("day") or chart.startswith("8"):
             try:
