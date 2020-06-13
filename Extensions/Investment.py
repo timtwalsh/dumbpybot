@@ -10,11 +10,14 @@ from discord.ext import tasks, commands
 
 DEBUG = False
 DEBUG_TICKER = True
-TICK_RATE = 6  # Default
-emoji_letters_dict = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭', 'I': '🇮',
-                      'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶', 'R': '🇷',
-                      'S': '🇸', 'T': '🇹', 'U': '🇺', 'V': '🇻', 'W': '🇼', 'X': '🇽', 'Y': '🇾', 'Z': '🇿', ' ': '✴'}
-company_default_names = ['Hand Job Nails',
+TICK_RATE = 6
+LETTERS_TO_EMOJI_ASCII = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭',
+                          'I': '🇮',
+                          'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶',
+                          'R': '🇷',
+                          'S': '🇸', 'T': '🇹', 'U': '🇺', 'V': '🇻', 'W': '🇼', 'X': '🇽', 'Y': '🇾', 'Z': '🇿',
+                          ' ': '✴'}
+COMPANY_DEFAULT_NAMES = ['Hand Job Nails',
                          'Blue Balls Inc',
                          'Fat Constructions',
                          'Umbrella Corp',
@@ -24,20 +27,20 @@ company_default_names = ['Hand Job Nails',
                          'Globex',
                          'Initech'
                          ]
-company_default_tickers = ['HANDJB', 'BLUBLS', 'FATCNT',
+COMPANY_DEFAULT_TICKERS = ['HANDJB', 'BLUBLS', 'FATCNT',
                            'UMBREL', 'GLBGYM', 'AQUINC',
                            'SOYLNT', 'GLOBEX', 'INITEC'
                            ]
-company_default_volatility = [0.75, 0.75, 0.75,
+COMPANY_DEFAULT_VOLATILITY = [0.75, 0.75, 0.75,
                               1.0, 1.0, 1.0,
                               1.25, 1.25, 1.25]
-company_default_description = ["Low Risk", "Low Risk", "Low Risk",  # based on the risk factor
+COMPANY_DEFAULT_DESCRIPTION = ["Low Risk", "Low Risk", "Low Risk",  # based on the risk factor
                                "Medium Risk", "Medium Risk", "Medium Risk",  # (0.33 = low, .5 = med, 1.0 = high )
                                "High Risk", "High Risk", "High Risk"]
-company_default_price = [500, 100, 1000,
+COMPANY_DEFAULT_PRICE = [500, 100, 1000,
                          1000, 500, 100,
                          500, 1000, 100]
-company_default_colours = ['#FFE4B5', '#4169E1', '#333333',
+COMPANY_DEFAULT_COLOURS = ['#FFE4B5', '#4169E1', '#333333',
                            '#FF0000', '#9400D3', '#FFD700',
                            '#32CD32', '#800000', '#008B8B']
 BASE_VOLATILITY = 0.025
@@ -172,14 +175,14 @@ class Investment(commands.Cog):
                 print(f"Loaded {len(self.stock_holdings)} Users Stock Holdings.")
         except FileNotFoundError:  # file doesn't exist, init all members with 0 currency to avoid index errors
             print("File Not Found")
-            for i, ticker in enumerate(company_default_tickers):
+            for i, ticker in enumerate(COMPANY_DEFAULT_TICKERS):
                 print(i, ticker)
-                self.company_tickers.append(company_default_tickers[i])
-                self.company_names.append(company_default_names[i])
-                self.company_desc.append(company_default_description[i])
-                self.company_prices.append(company_default_price[i])
-                self.company_volatility.append(company_default_volatility[i])
-                self.price_history.append([company_default_price[i] for j in range(10)])  # set up a history of 10
+                self.company_tickers.append(COMPANY_DEFAULT_TICKERS[i])
+                self.company_names.append(COMPANY_DEFAULT_NAMES[i])
+                self.company_desc.append(COMPANY_DEFAULT_DESCRIPTION[i])
+                self.company_prices.append(COMPANY_DEFAULT_PRICE[i])
+                self.company_volatility.append(COMPANY_DEFAULT_VOLATILITY[i])
+                self.price_history.append([COMPANY_DEFAULT_PRICE[i] for j in range(10)])  # set up a history of 10
             await self.save_data()
 
     async def save_data(self):
@@ -306,7 +309,7 @@ class Investment(commands.Cog):
                     for x in range(3):
                         for y in range(3):
                             index = y * 3 + x
-                            ax[x, y].plot(my_timeperiods, stock[index], color=company_default_colours[index],
+                            ax[x, y].plot(my_timeperiods, stock[index], color=COMPANY_DEFAULT_COLOURS[index],
                                           label=leg[index])
                             ax[x, y].xaxis.set_major_formatter(date_format)
                             ax[x, y].tick_params(axis='both', which='major', labelsize=6)
@@ -315,6 +318,7 @@ class Investment(commands.Cog):
                     fig.suptitle("All Stock Values, Last 7 days", fontsize=12, y=.95)
                     # plt.draw()
                     plt.savefig('7days.png')
+                    plt.close(fig)
                     # plt.show()
                     print("Updated 7 day chart")
                 # 8 hours 3x3 plot
@@ -331,7 +335,7 @@ class Investment(commands.Cog):
                     for x in range(3):
                         for y in range(3):
                             index = y * 3 + x
-                            ax[x, y].plot(my_timeperiods, stock[index], color=company_default_colours[index],
+                            ax[x, y].plot(my_timeperiods, stock[index], color=COMPANY_DEFAULT_COLOURS[index],
                                           label=leg[index])
                             ax[x, y].xaxis.set_major_formatter(date_format)
                             ax[x, y].tick_params(axis='both', which='major', labelsize=8)
@@ -340,6 +344,7 @@ class Investment(commands.Cog):
                     fig.suptitle("All Stock Values, Last 8 hours", fontsize=12, y=.95)
                     # plt.draw()
                     plt.savefig('8hours.png')
+                    plt.close(fig)
                     # plt.show()
                     print("saved 8 hour chart")
                 await self.save_data()
