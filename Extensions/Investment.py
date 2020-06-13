@@ -8,8 +8,8 @@ import discord
 import random
 from discord.ext import tasks, commands
 
-DEBUG = True
-DEBUG_TICKER = False
+DEBUG = False
+DEBUG_TICKER = True
 TICK_RATE = 6  # Default
 emoji_letters_dict = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭', 'I': '🇮',
                       'J': '🇯', 'K': '🇰', 'L': '🇱', 'M': '🇲', 'N': '🇳', 'O': '🇴', 'P': '🇵', 'Q': '🇶', 'R': '🇷',
@@ -268,17 +268,11 @@ class Investment(commands.Cog):
         if not self.bot.is_closed():
             if self.investment_ticker >= INVESTMENT_TICKRATE:
                 for i, company in enumerate(self.company_tickers):
-                    if DEBUG_TICKER:
-                        print(company)
                     previous_price = self.company_prices[i]
                     company_volatility = self.company_volatility[i]
                     current_momentum = 0
-                    if DEBUG_TICKER:
-                        print("HISTORY:: ", end=" ")
                     for j in range(len(self.price_history[i]) - 8, len(self.price_history[i])):
                         current_momentum += self.price_history[i][j] / self.price_history[i][j - 1]
-                        if DEBUG_TICKER:
-                            print(f"{self.price_history[i][j]:.2f}", end=",")
                     current_momentum = round(current_momentum / 8, 5) - 1
                     if self.recent_trades[i] != 0:
                         if current_momentum < 0:
@@ -293,7 +287,6 @@ class Investment(commands.Cog):
                     if DEBUG_TICKER:
                         print("total_change ", total_change, " random ", random_fluctuation, " momentum ",
                               current_momentum)
-                        print(f"Momentum {current_momentum:.3f}, Total_Change = {random_fluctuation:.5f}")
                         print(previous_price, " -> ", next_price)
                     self.company_prices[i] = max(next_price, 1)
                     self.price_history[i].append(previous_price)
@@ -325,6 +318,7 @@ class Investment(commands.Cog):
                     print("Updated 7 day chart")
                 # 8 hours 3x3 plot
                 if len(self.price_history[-1]) > 24:  # ensure we have enough price history
+                    print("Updating 8 hour chart...", end=" ")
                     my_timeperiods = [dt.datetime.now() - (dt.timedelta(minutes=15 * i)) for i in range(24, 0, -1)]
                     stock = []
                     leg = []
@@ -346,7 +340,7 @@ class Investment(commands.Cog):
                     plt.draw()
                     plt.savefig('8hours.png')
                     # plt.show()
-                    print("Updated 8 hour chart")
+                    print("saved 8 hour chart")
                 await self.save_data()
                 self.investment_ticker = 0
             self.time_elapsed += self.bot.TICK_RATE
