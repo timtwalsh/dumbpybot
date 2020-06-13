@@ -265,7 +265,8 @@ class Investment(commands.Cog):
     async def timeout(self):
         debug_channel = self.bot.get_channel(self.bot.DEBUG_CHANNEL)
         log_channel = self.bot.get_channel(self.bot.LOG_CHANNEL)
-        if not self.bot.is_closed():
+        if not self.bot.is_closed() and len(self.company_tickers) > 0:
+            print("TICK", self.investment_ticker)
             if self.investment_ticker >= INVESTMENT_TICKRATE:
                 for i, company in enumerate(self.company_tickers):
                     previous_price = self.company_prices[i]
