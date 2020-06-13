@@ -9,7 +9,7 @@ import random
 from discord.ext import tasks, commands
 
 DEBUG = False
-DEBUG_TICKER = True
+DEBUG_TICKER = False
 TICK_RATE = 6
 LETTERS_TO_EMOJI_ASCII = {'A': '🇦', 'B': '🇧', 'C': '🇨', 'D': '🇩', 'E': '🇪', 'F': '🇫', 'G': '🇬', 'H': '🇭',
                           'I': '🇮',
