@@ -193,7 +193,7 @@ class Investment(commands.Cog):
             print(json.dump(self.stock_holdings, out_file, sort_keys=False, indent=4))
 
     @commands.command(name="buy investments", aliases=["buy"])
-    async def buy(self, ctx, ticker: str, amount: int):
+    async def buy(self, ctx, ticker: str = "", amount: int = 0):
         """!buy"""
         user_id = str(ctx.author.id)
         ticker = str(ticker).upper()
@@ -204,7 +204,7 @@ class Investment(commands.Cog):
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="sell investments", aliases=["sell"])
-    async def sell(self, ctx, ticker: str, amount: int):
+    async def sell(self, ctx, ticker: str = "", amount: int = 0):
         """!sell"""
         user_id = str(ctx.author.id)
         ticker = str(ticker).upper()
