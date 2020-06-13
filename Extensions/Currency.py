@@ -133,7 +133,6 @@ class Currency(commands.Cog):
                 if len(member.roles) > 1:
                     for role in member.roles:
                         if role.name == 'game':
-                            print('gamer')
                             if str(member.id) not in self.member_currency.keys():
                                 print("New Member:", member)
                                 self.member_currency[str(member.id)] = 0.0
