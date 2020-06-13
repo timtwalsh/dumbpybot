@@ -316,11 +316,11 @@ class Investment(commands.Cog):
                             ax[x, y].plot(my_timeperiods, stock[index], color=COMPANY_DEFAULT_COLOURS[index],
                                           label=leg[index])
                             ax[x, y].xaxis.set_major_formatter(date_format)
+                            ax[x, y].tick_params(axis='both', which='major', labelsize=8)
                             ax[x, y].tick_params(axis="y", labelsize=6)
-                            ax[x, y].tick_params(axis='both', which='major', labelsize=6)
                             ax[x, y].legend(loc="best")
                     fig.autofmt_xdate()
-                    fig.suptitle("All Stock Values, Last 7 days", fontsize=12, y=.95)
+                    fig.suptitle("All Stock Values, Last 7 days", fontsize=10, y=1)
                     # plt.draw()
                     plt.tight_layout(w_pad=1, h_pad=0.2)
                     plt.savefig('7days.png')
@@ -344,8 +344,8 @@ class Investment(commands.Cog):
                             ax[x, y].plot(my_timeperiods, stock[index], color=COMPANY_DEFAULT_COLOURS[index],
                                           label=leg[index])
                             ax[x, y].xaxis.set_major_formatter(date_format)
-                            ax[x, y].tick_params(axis="y", labelsize=6)
                             ax[x, y].tick_params(axis='both', which='major', labelsize=8)
+                            ax[x, y].tick_params(axis="y", labelsize=6)
                             ax[x, y].legend(loc="best")
                     fig.autofmt_xdate()
                     fig.suptitle("All Stock Values, Last 8 hours", fontsize=10, y=1)
