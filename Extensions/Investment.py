@@ -192,55 +192,47 @@ class Investment(commands.Cog):
     @commands.command(name="buy investments", aliases=["buy"])
     async def buy(self, ctx, ticker: str, amount: int):
         """!buy"""
-        user_id = ctx.author.id
-        outcome = self.buy_investment(user_id=str(user_id), ticker=ticker.upper(), amount=abs(amount))
+        user_id = str(ctx.author.id)
+        ticker = str(ticker).upper()
+        amount = abs(amount)
+        outcome = self.buy_investment(user_id=user_id, ticker=ticker, amount=amount)
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="sell investments", aliases=["sell"])
     async def sell(self, ctx, ticker: str, amount: int):
         """!sell"""
-        user_id = ctx.author.id
-        outcome = self.sell_investment(user_id=str(user_id), ticker=ticker.upper(), amount=abs(amount))
+        user_id = str(ctx.author.id)
+        ticker = str(ticker).upper()
+        amount = abs(amount)
+        outcome = self.sell_investment(user_id=user_id, ticker=ticker, amount=amount)
         await ctx.channel.send(outcome, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
-    @commands.command(name="price check", aliases=["pc", "week", "day"])
+    @commands.command(name="price check", aliases=["pc", "week", "day", "stocks", "stocklist"])
     async def check(self, ctx, chart: str):
         """chart prices"""
-        if chart.startswith("now") or chart.startswith("current"):
-            msg = "Stock Prices:```"
-            msg += f"{'Stock':<20} | {'Price':<20}\n"
-            msg += f"---------------------------------------\n"
-            for i, stock in enumerate(self.company_names):
-                msg += f"{stock:<20} | {self.company_prices[i]:<20}\n"
-            msg += "```"
-            await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         if chart.startswith("day") or chart.startswith("8"):
             await ctx.channel.send(file=discord.File('8hours.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
         elif chart.startswith("week") or chart.startswith("7"):
             await ctx.channel.send(file=discord.File('7days.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
-        await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
-
-    @commands.command(name="stocks", aliases=["stocklist"])
-    async def stocks(self, ctx):
-        """chart prices"""
-        msg = "Company Details:```"
-        msg += f"{'Name':<30} | {'Desc':<15} | {'Price':<20}\n"
-        msg += f"-----------------------------------------------------------------\n"
-        for i, stock in enumerate(self.company_names):
-            msg += f"{self.company_names[i] + ' (' + self.company_tickers[i] + ')':<30} | {self.company_desc[i]:<15} | {self.company_prices[i]:<20.2f}\n"
-        msg += "```"
-        await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
+        else:
+            msg = "Company Details:```"
+            msg += f"{'Name':<30} | {'Desc':<15} | {'Price':<20}\n"
+            msg += f"-----------------------------------------------------------------\n"
+            for i, stock in enumerate(self.company_names):
+                msg += f"{self.company_names[i] + ' (' + self.company_tickers[i] + ')':<30} | {self.company_desc[i]:<15} | {self.company_prices[i]:<20.2f}\n"
+            msg += "```"
+            await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="investments", aliases=["myinv", "my inv", "myinvestments", "userinv", "user inv"])
     async def investments(self, ctx, *, member: discord.Member = None):
         """!myinv or userinv [user]"""
-        user_id = ctx.author.id
+        user_id = str(ctx.author.id)
         if member != None:
-            user_id = member.id
-        investments = self.get_investments(user_id=str(user_id))
+            user_id = str(member.id)
+        investments = self.get_investments(user_id=user_id)
         msg = "Current Investments:```"
         msg += f"{'Investment':<20} | {'Holding':<10} | {'Value':<15}\n"
         msg += "---------------------------------------------------\n"
