@@ -78,7 +78,10 @@ class Investment(commands.Cog):
 
     def get_investments(self, user_id=""):
         if user_id != "":
-            return self.stock_holdings[user_id]
+            if user_id in self.stock_holdings.keys():
+                return self.stock_holdings[user_id]
+            else:
+                return False
         else:
             print("Error, must specify a user_id")
             return False
@@ -213,9 +216,16 @@ class Investment(commands.Cog):
     async def check(self, ctx, chart: str):
         """chart prices"""
         if chart.startswith("day") or chart.startswith("8"):
-            await ctx.channel.send(file=discord.File('8hours.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
+            try:
+                await ctx.channel.send(file=discord.File('8hours.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
+            except FileNotFoundError:
+                await ctx.channel.send("History Not Yet Available.", delete_after=self.bot.MEDIUM_DELETE_DELAY)
+
         elif chart.startswith("week") or chart.startswith("7"):
-            await ctx.channel.send(file=discord.File('7days.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
+            try:
+                await ctx.channel.send(file=discord.File('7days.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)
+            except FileNotFoundError:
+                await ctx.channel.send("History Not Yet Available.", delete_after=self.bot.MEDIUM_DELETE_DELAY)
         else:
             msg = "Company Details:```"
             msg += f"{'Name':<30} | {'Desc':<15} | {'Price':<20}\n"
@@ -233,12 +243,15 @@ class Investment(commands.Cog):
         if member != None:
             user_id = str(member.id)
         investments = self.get_investments(user_id=user_id)
-        msg = "Current Investments:```"
-        msg += f"{'Investment':<20} | {'Holding':<10} | {'Value':<15}\n"
-        msg += "---------------------------------------------------\n"
-        for investment in investments.keys():
-            msg += f"{investment:<20} | {investments[investment]:<10} | {self.company_prices[self.company_tickers.index(investment)] * investments[investment]:<15.2f}\n"
-        msg += '```'
+        if investments != False:
+            msg = "Current Investments:```"
+            msg += f"{'Investment':<20} | {'Holding':<10} | {'Value':<15}\n"
+            msg += "---------------------------------------------------\n"
+            for investment in investments.keys():
+                msg += f"{investment:<20} | {investments[investment]:<10} | {self.company_prices[self.company_tickers.index(investment)] * investments[investment]:<15.2f}\n"
+            msg += '```'
+        else:
+            msg = "You don't have any stocks!"
         await ctx.channel.send(msg, delete_after=self.bot.MEDIUM_DELETE_DELAY)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
