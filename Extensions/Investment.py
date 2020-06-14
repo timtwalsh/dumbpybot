@@ -117,7 +117,7 @@ class Investment(commands.Cog):
                                 price -= brokerage
                                 self.stock_holdings[user_id][ticker] = current_stock - amount
                                 self.bot.get_cog('Currency').add_user_currency(user_id, price)
-                                return f"Sale Complete```SOLD: {amount} {ticker} for {price:.2f}, minus {price * 0.99} comission.\n" \
+                                return f"Sale Complete```SOLD: {amount} {ticker} for {price:.2f}, minus {price * 0.01} comission.\n" \
                                        f"You now hold {current_stock - amount} worth {(current_stock - amount) * current_stock_price:.2f}```"
                             else:
                                 return f"Not enough {ticker}"
