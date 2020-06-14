@@ -33,7 +33,8 @@ class Misc(commands.Cog):
     @commands.command()
     async def winners(self, ctx):
         """!winners"""
-        past_winners = ["Season 1 - Mangles", "Season 2 - Mangles", "Season 3 - Dave"]
+        past_winners = ["Season 1 - Mangles", "Season 2 - Mangles", "Season 3 - Dave, Mangles/Zagadka Runners Up",
+                        "Season 4 - Vesp, Mangles/Nestor Runners Up"]
         msg = "Shekel Season Past Winners\n```"
         for winner in past_winners:
             msg += winner
