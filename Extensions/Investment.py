@@ -79,6 +79,17 @@ class Investment(commands.Cog):
         #     print(json.dump(self.all_company_details, out_file, sort_keys=False, indent=4))
         # load
 
+    def get_price(self, request=""):
+        if request != "":
+            for i, ticker in enumerate(self.company_tickers):
+                if request == ticker:
+                    return float(self.company_prices[i])
+            else:
+                return False
+        else:
+            print("Error, must specify a ticker")
+            return False
+
     def get_investments(self, user_id=""):
         if user_id != "":
             if user_id in self.stock_holdings.keys():
@@ -200,9 +211,9 @@ class Investment(commands.Cog):
             print(json.dump(self.stock_holdings, out_file, sort_keys=False, indent=4))
             print("Saved Users Company Data")
 
-    @commands.command(name="buy investments", aliases=["buy"])
+    @commands.command(name="buy")
     async def buy(self, ctx, ticker: str = "", amount: int = 0):
-        """!buy"""
+        """!buy [stock_ticker] amount"""
         user_id = str(ctx.author.id)
         ticker = str(ticker).upper()
         amount = abs(amount)
@@ -213,9 +224,9 @@ class Investment(commands.Cog):
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
         await self.save_data()
 
-    @commands.command(name="sell investments", aliases=["sell"])
+    @commands.command(name="sell")
     async def sell(self, ctx, ticker: str = "", amount: int = 0):
-        """!sell"""
+        """!sell [stock_ticker] amount"""
         user_id = str(ctx.author.id)
         ticker = str(ticker).upper()
         amount = abs(amount)
@@ -228,7 +239,7 @@ class Investment(commands.Cog):
 
     @commands.command(name="price check", aliases=["pc", "week", "day", "stocks", "stocklist"])
     async def check(self, ctx, chart: str = ""):
-        """chart prices"""
+        """Price Check !pc [now|day|week]"""
         if chart.startswith("day") or chart.startswith("8"):
             try:
                 await ctx.channel.send(file=discord.File('8hours.png'), delete_after=self.bot.MEDIUM_DELETE_DELAY)

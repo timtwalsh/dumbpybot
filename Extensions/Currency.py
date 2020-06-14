@@ -108,7 +108,7 @@ class Currency(commands.Cog):
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
 
     @commands.command(name="topcurrency", aliases=["top$", "topmoney", "topdollars"])
-    async def topatopcurrencyctivities(self, ctx):
+    async def topcurrency(self, ctx):
         """!top$"""
         member = self.member_currency.keys()
         cash = self.member_currency.values()
@@ -116,9 +116,14 @@ class Currency(commands.Cog):
         member_and_cash = sorted(member_and_cash, key=itemgetter(1, 0), reverse=True)
         member_and_cash = member_and_cash[:10]
         msg = f"{ctx.guild.name} Top {str(self.bot.CURRENCY_NAME).capitalize()} Earners \n```"
-        msg += f"{'User':<32.32} | {str(self.bot.CURRENCY_NAME).capitalize()}s \n- - - - - - - - - - - - - - - - -|- - - - - - - - -\n"
+        msg += f"{'User':<20.20} | {str(self.bot.CURRENCY_NAME).capitalize():>15}s | {'Holdings':>15}\n---------------------|------------------|------------------\n"
         for member, cash in member_and_cash:
-            msg += f"{str(self.bot.get_user(int(member))):<32.32} | {self.bot.CURRENCY_TOKEN}{cash:>.1f} \n"
+            holdings = 0
+            if self.bot.get_cog('Investment').get_investments(user_id=member):
+                for holding in self.bot.get_cog('Investment').get_investments(user_id=member).keys():
+                    holdings += self.bot.get_cog('Investment').get_investments(user_id=member)[
+                                    holding] * self.bot.get_cog('Investment').get_price(holding)
+            msg += f"{str(self.bot.get_user(int(member))):<20.20} | {self.bot.CURRENCY_TOKEN}{cash:>15.1f} | {self.bot.CURRENCY_TOKEN}{holdings:>15.1f}\n"
             print()
         msg += "```"
         # log = await self.bot.get_channel(self.bot.LOG_CHANNEL).send(msg)
