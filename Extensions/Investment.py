@@ -328,7 +328,7 @@ class Investment(commands.Cog):
                     for i, history in enumerate(self.price_history):
                         stock.append(self.price_history[i][-672:])
                         leg.append(self.company_tickers[i][-672:])
-                    date_format = mdates.DateFormatter('%a %d/%m/%y')
+                    date_format = mdates.DateFormatter('%d/%m/%y')
                     fig, ax = plt.subplots(3, 3, sharex=True, squeeze=False)
                     for x in range(3):
                         for y in range(3):
