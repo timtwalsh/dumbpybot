@@ -299,10 +299,10 @@ class Investment(commands.Cog):
                     current_momentum = round(current_momentum / 8, 5) - 1
                     if self.stock_movement[company] != 0:
                         print(current_momentum)
-                        if current_momentum < 0:
+                        if current_momentum < 0 < self.stock_movement[company]:
                             if self.stock_movement[company] > 0:
                                 current_momentum = round(current_momentum / 8, 5) + self.stock_movement[company] / 100
-                        else:
+                        elif current_momentum > 0 > self.stock_movement[company]:
                             if self.stock_movement[company] < 0:
                                 current_momentum = round(current_momentum / 8, 5) + self.stock_movement[company] / 100
                         print(current_momentum)
