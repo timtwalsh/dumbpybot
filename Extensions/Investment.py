@@ -71,6 +71,7 @@ class Investment(commands.Cog):
         self.stock_holdings = {}
         self.recent_trades = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.time_elapsed = 0
+        self.stock_movement = {}
         # save
         # for i, ticker in enumerate(self.company_tickers):
         #     self.all_company_details.append([self.company_tickers[i], self.company_names[i], self.company_desc[i],
@@ -117,6 +118,7 @@ class Investment(commands.Cog):
                                 price -= brokerage
                                 self.stock_holdings[user_id][ticker] = current_stock - amount
                                 self.bot.get_cog('Currency').add_user_currency(user_id, price)
+                                self.stock_movement[ticker] = self.stock_movement[ticker] - 1
                                 return f"Sale Complete```SOLD: {amount} {ticker} for {price:.2f}, minus {price * 0.01} comission.\n" \
                                        f"You now hold {current_stock - amount} worth {(current_stock - amount) * current_stock_price:.2f}```"
                             else:
@@ -153,6 +155,7 @@ class Investment(commands.Cog):
                     if user_balance >= price:
                         self.bot.get_cog('Currency').remove_user_currency(user_id, price)
                         self.stock_holdings[user_id][ticker] = current_stock + amount
+                        self.stock_movement[ticker] = self.stock_movement[ticker] + 1
                         return f"Purchase Completed```BROUGHT: {amount} of {ticker} for {price:.2f} ({current_stock_price:.2f} ea)\n" \
                                f"You now hold {amount + current_stock} {ticker} worth {(amount + current_stock) * current_stock_price:.2f}```"
                     else:
@@ -181,6 +184,8 @@ class Investment(commands.Cog):
                     self.all_company_details.append(
                         [self.company_tickers[i], self.company_names[i], self.company_desc[i],
                          self.company_prices[i], self.price_history[i]])
+                    for company in self.company_tickers:
+                        self.stock_movement[company] = 0
                 print(f"Loaded {len(self.all_company_details)} Companies.")
             with open(f'{self.qualified_name}_users.json', 'r+') as in_file:
                 user = json.load(in_file)
@@ -292,11 +297,16 @@ class Investment(commands.Cog):
                     for j in range(len(self.price_history[i]) - 8, len(self.price_history[i])):
                         current_momentum += self.price_history[i][j] / self.price_history[i][j - 1]
                     current_momentum = round(current_momentum / 8, 5) - 1
-                    if self.recent_trades[i] != 0:
+                    if self.stock_movement[company] != 0:
+                        print(current_momentum)
                         if current_momentum < 0:
-                            current_momentum = round(current_momentum / 8, 5) + self.recent_trades[i] - 1
+                            if self.stock_movement[company] > 0:
+                                current_momentum = round(current_momentum / 8, 5) + self.stock_movement[company] / 100
                         else:
-                            current_momentum = round(current_momentum / 8, 5) - self.recent_trades[i] - 1
+                            if self.stock_movement[company] < 0:
+                                current_momentum = round(current_momentum / 8, 5) + self.stock_movement[company] / 100
+                        print(current_momentum)
+                        self.stock_movement[company] = 0
 
                     random_fluctuation = round(random.uniform(-BASE_VOLATILITY, BASE_VOLATILITY), 5)
                     total_change = max(min(current_momentum / 2, BASE_VOLATILITY), -BASE_VOLATILITY) + max(
