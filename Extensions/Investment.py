@@ -294,9 +294,11 @@ class Investment(commands.Cog):
                     previous_price = self.company_prices[i]
                     company_volatility = self.company_volatility[i]
                     current_momentum = 0
+
                     for j in range(len(self.price_history[i]) - 8, len(self.price_history[i])):
                         current_momentum += self.price_history[i][j] / self.price_history[i][j - 1]
-                    current_momentum = round(current_momentum / 8, 5) - 1
+                    current_momentum = round(current_momentum / 8, 5)
+                    current_momentum = max(min(current_momentum / 2, BASE_VOLATILITY), -BASE_VOLATILITY)
                     if self.stock_movement[company] != 0:
                         print(current_momentum)
                         if current_momentum < 0 < self.stock_movement[company]:
@@ -306,9 +308,8 @@ class Investment(commands.Cog):
                         print(current_momentum)
                         self.stock_movement[company] = 0
 
-                    random_fluctuation = round(random.uniform(-BASE_VOLATILITY, BASE_VOLATILITY), 5)
-                    total_change = max(min(current_momentum / 2, BASE_VOLATILITY), -BASE_VOLATILITY) + max(
-                        min(random_fluctuation, BASE_VOLATILITY), -BASE_VOLATILITY)
+                    random_fluctuation = current_momentum + round(random.uniform(-BASE_VOLATILITY, BASE_VOLATILITY), 5)
+                    total_change = + max(min(random_fluctuation, BASE_VOLATILITY), -BASE_VOLATILITY)
                     next_price = round(previous_price * (1 + total_change), 5)
                     if DEBUG_TICKER:
                         print("total_change ", total_change, " random ", random_fluctuation, " momentum ",
