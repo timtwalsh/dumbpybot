@@ -29,7 +29,7 @@ class Gambling(commands.Cog):
         self.time_elapsed = 0
         self.deathroll_users = []
         self.deathroll_status = ''
-        self.deathroll_minimum = 500.0
+        self.deathroll_minimum = 100.0
         self.DEATHROLL_WAIT_TIME = 15
         self.DEATHROLL_MIN_PLAYERS = 2
         self.deathroll_max = 0
