@@ -43,8 +43,8 @@ COMPANY_DEFAULT_PRICE = [500, 100, 1000,
 COMPANY_DEFAULT_COLOURS = ['#FFE4B5', '#4169E1', '#333333',
                            '#FF0000', '#9400D3', '#FFD700',
                            '#32CD32', '#800000', '#008B8B']
-BASE_VOLATILITY = 0.025
-INVESTMENT_TICKRATE = 6  # 900 = 15 minute update rate
+BASE_VOLATILITY = 0.05
+INVESTMENT_TICKRATE = 900  # 900 = 15 minute update rate
 
 
 def _default(self, obj):
