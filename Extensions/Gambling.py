@@ -212,7 +212,7 @@ class Gambling(commands.Cog):
         bet_side = bet_string[0]
         print(bet_user_id, self.deathroll_user_ids)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
-        if self.deathroll_status == "":
+        if self.deathroll_status == "" or self.deathroll_status.startswith('Deathroll: REQUESTED:'):
             if bet_user_id in self.deathroll_user_ids:
                 if bet_user == self.deathroll_current_player:
                     self.deathroll_ready = True  # skip the afk timer
