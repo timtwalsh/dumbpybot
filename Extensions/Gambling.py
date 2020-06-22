@@ -212,53 +212,52 @@ class Gambling(commands.Cog):
         bet_side = bet_string[0]
         print(bet_user_id, self.deathroll_user_ids)
         await ctx.message.delete(delay=self.bot.SHORT_DELETE_DELAY)
-        if self.deathroll_status == "" or (
-                self.deathroll_status.startswith('Deathroll') and bet_user_id in self.deathroll_user_ids):
+        if self.deathroll_status == "" or self.deathroll_status.startswith('Deathroll: REQUESTED'):
+            if self.deathroll_status.startswith('Deathroll: REQUESTED'):
+                bet_amount = self.deathroll_buyin
+            else:
+                bet_amount = self.deathroll_minimum
+                try:
+                    bet_amount = max(self.deathroll_minimum, float(bet_string[1]))
+                except IndexError:
+                    bet_amount = self.deathroll_minimum
+                self.deathroll_buyin = bet_amount
+            user_balance = self.bot.get_cog('Currency').get_user_currency(bet_user_id)
+            valid_bet = False
+            if float(user_balance) >= float(bet_amount):
+                if float(bet_amount) >= self.deathroll_minimum:
+                    valid_bet = True
+                    self.bot.get_cog('Currency').remove_user_currency(bet_user_id, bet_amount)
+                else:
+                    valid_bet = False
+                    msg = f'Deathroll: Invalid - Deathrolling only allowed above {self.deathroll_minimum}'
+                    await ctx.send(msg, delete_after=self.bot.SHORT_DELETE_DELAY)
+            else:
+                valid_bet = False
+                bet_amount = max(self.deathroll_minimum, self.deathroll_buyin)
+                msg = f'Deathroll: Invalid - You need to have {bet_amount} to join.'
+                await ctx.send(msg, delete_after=10)
+            if valid_bet:  # User placed a valid bet/has enough currency.
+                """!deathroll - Starts a deathroll Request"""
+                if self.deathroll_status == '':
+                    msg = f'Deathroll: REQUESTED: ({bet_amount:.0f} buy-in, (+1 User = ${bet_amount * (1 + min(min(max(0, len(self.deathroll_users) - 1), 4) * .2, 0.5)):.0f} pot)): '
+                    self.deathroll_status = msg
+                    self.deathroll_users.append(str(ctx.author))
+                    self.deathroll_user_ids.append(str(ctx.author.id))
+                    await ctx.channel.send(msg)
+                elif self.deathroll_status.startswith('Deathroll: REQUESTED: '):
+                    if not str(ctx.author) in self.deathroll_users:
+                        self.deathroll_users.append(str(ctx.author))
+                        self.deathroll_user_ids.append(str(ctx.author.id))
+                        await ctx.channel.send(f"{bet_user} is joining the Deathroll!", delete_after=10.0)
+        else:
             if bet_user_id in self.deathroll_user_ids:
                 if bet_user == self.deathroll_current_player:
                     self.deathroll_ready = True  # skip the afk timer
                 else:
                     await ctx.channel.send("Wait your Turn!", delete_after=5.0)
             else:
-                bet_amount = self.deathroll_minimum
-                if self.deathroll_status != '':
-                    bet_amount = self.deathroll_buyin
-                else:
-                    try:
-                        bet_amount = max(self.deathroll_minimum, float(bet_string[1]))
-                    except IndexError:
-                        bet_amount = self.deathroll_minimum
-                    self.deathroll_buyin = bet_amount
-                user_balance = self.bot.get_cog('Currency').get_user_currency(bet_user_id)
-                valid_bet = False
-                if float(user_balance) >= float(bet_amount):
-                    if float(bet_amount) >= self.deathroll_minimum:
-                        valid_bet = True
-                        self.bot.get_cog('Currency').remove_user_currency(bet_user_id, bet_amount)
-                    else:
-                        valid_bet = False
-                        msg = f'Deathroll: Invalid - Deathrolling only allowed above {self.deathroll_minimum}'
-                        await ctx.send(msg, delete_after=self.bot.SHORT_DELETE_DELAY)
-                else:
-                    valid_bet = False
-                    bet_amount = max(self.deathroll_minimum, self.deathroll_buyin)
-                    msg = f'Deathroll: Invalid - You need to have {bet_amount} to join.'
-                    await ctx.send(msg, delete_after=10)
-                if valid_bet:  # User placed a valid bet/has enough currency.
-                    """!deathroll - Starts a deathroll Request"""
-                    if self.deathroll_status == '':
-                        msg = f'Deathroll: REQUESTED: ({bet_amount:.0f} buy-in, (+1 User = ${bet_amount * (1 + min(min(max(0, len(self.deathroll_users) - 1), 4) * .2, 0.5)):.0f} pot)): '
-                        self.deathroll_status = msg
-                        self.deathroll_users.append(str(ctx.author))
-                        self.deathroll_user_ids.append(str(ctx.author.id))
-                        await ctx.channel.send(msg)
-                    elif self.deathroll_status.startswith('Deathroll: REQUESTED: '):
-                        if not str(ctx.author) in self.deathroll_users:
-                            self.deathroll_users.append(str(ctx.author))
-                            self.deathroll_user_ids.append(str(ctx.author.id))
-                            await ctx.channel.send(f"{bet_user} is joining the Deathroll!", delete_after=10.0)
-        else:
-            await ctx.channel.send(f"Deathroll already in progress.", delete_after=10.0)
+                await ctx.channel.send("Wait for the current Deathroll to finish!", delete_after=5.0)
 
     @commands.command(aliases=["heads", "tails"])
     async def gamble(self, ctx):
